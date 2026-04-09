@@ -24,6 +24,19 @@ class GeminiClient:
         system_prompt: str, 
         user_message: str
     ) -> Optional[dict[str, Any]]:
+        """
+        Sends a request to the Gemini 2.0 Flash model to generate a structured entry recommendation.
+        
+        Retry Mechanism: 
+            Automated retries (max 3) with exponential back-off (2s, 4s, 8s) on 429/5xx errors.
+        
+        Failure Policy:
+            Returns None if all retries fail, a timeout occurs, or the API key is missing. 
+            The router should handle this by falling back to rule-based pathfinding.
+        
+        Schema Enforcement:
+            Uses a native JSON schema to force the model to return a structured Recommendation object.
+        """
         if not self.api_key:
             logger.warning("[GEMINI] No GEMINI_API_KEY set — skipping AI call")
             return None
@@ -71,16 +84,18 @@ class GeminiClient:
                     return parsed
 
                 if response.status_code in RETRY_STATUSES:
-                    wait = BASE_BACKOFF * (2 ** (attempt - 1))
                     # Respect Retry-After header if present
                     retry_after = response.headers.get("Retry-After")
                     if retry_after:
                         try:
-                            wait = max(wait, float(retry_after))
+                            wait = min(float(retry_after), 30.0)
                         except ValueError:
-                            pass
+                            wait = BASE_BACKOFF * (2 ** (attempt - 1))
+                    else:
+                        wait = BASE_BACKOFF * (2 ** (attempt - 1))
+
                     logger.warning(
-                        f"[GEMINI] HTTP {response.status_code} on attempt {attempt} — "
+                        f"[GEMINI] {response.status_code} on attempt {attempt} — "
                         f"retrying in {wait:.1f}s"
                     )
                     if attempt < MAX_RETRIES:

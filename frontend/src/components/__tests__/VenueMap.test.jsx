@@ -27,7 +27,7 @@ describe('VenueMap Component', () => {
     
     // Mock the script element check so it thinks it is already loaded
     document.getElementById = vi.fn().mockImplementation((id) => {
-      if (id === 'google-maps-script') return { id: 'google-maps-script' };
+      if (id === 'gmap-script') return { id: 'gmap-script' };
       return null;
     });
   });

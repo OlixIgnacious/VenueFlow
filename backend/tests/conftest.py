@@ -10,11 +10,11 @@ def mock_gemini_client():
     with patch("backend.services.gemini_client.GeminiClient.generate_recommendation") as mock:
         # Default mock response for a successful AI recommendation
         mock.return_value = {
-            "recommended_entry": "entry_A",
-            "wait_minutes": 5,
+            "recommended_entry": "entry_B",
+            "wait_minutes": 2,
             "crowd_level": "low",
-            "reason": "Mocked AI recommends Gate A due to optimal traffic flow.",
-            "alt_entry": "entry_B",
+            "reason": "Mocked AI recommends Gate B because it has significantly lower density and a shorter wait time compared to other options.",
+            "alt_entry": "entry_A",
             "tip": "This is a mocked AI response for testing."
         }
         yield mock

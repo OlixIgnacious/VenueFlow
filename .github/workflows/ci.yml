@@ -54,7 +54,7 @@ jobs:
           ADMIN_API_KEY: ${{ steps.secrets.outputs.ADMIN_API_KEY }}
           TESTING: "true" # Enforces AI mocking via conftest.py
         run: |
-          pytest backend/tests/ -v
+          pytest backend/tests/ -v --cov=backend --cov-report=term-missing
 
   frontend-test:
     runs-on: ubuntu-latest

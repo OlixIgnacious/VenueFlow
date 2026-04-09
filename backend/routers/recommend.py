@@ -20,7 +20,9 @@ CACHE_TTL = 300  # 5 minutes
 _recommendation_cache = TTLCache(maxsize=500, ttl=CACHE_TTL)
 
 
-@router.get("/", response_model=Recommendation)
+@router.get("/", response_model=Recommendation,
+    summary="Get AI entry recommendation",
+    description="Returns the optimal venue entry point based on real-time crowd density and seat location. Results cached 5 min per (event_id, ref) pair.")
 @limiter.limit("30/minute")
 async def get_recommendation(
     request: Request,

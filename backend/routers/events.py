@@ -5,7 +5,9 @@ from typing import Dict
 
 router = APIRouter()
 
-@router.get("/list", response_model=Dict[str, EventConfig])
+@router.get("/list", response_model=Dict[str, EventConfig],
+    summary="List all events",
+    description="Returns a map of all available events, including resolved venue names, for use in the discovery and entry dashboard.")
 async def list_events() -> Dict[str, EventConfig]:
     events_data = firebase_client.get_active_events()
     if not events_data:

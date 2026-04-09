@@ -6,6 +6,7 @@ firebase-admin
 google-cloud-secret-manager
 google-generativeai
 pytest
+pytest-cov
 httpx
 python-dotenv
 slowapi

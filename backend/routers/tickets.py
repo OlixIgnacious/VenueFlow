@@ -11,7 +11,9 @@ router = APIRouter()
 limiter = Limiter(key_func=get_remote_address)
 
 
-@router.get("/{ticket_id}", response_model=Ticket)
+@router.get("/{ticket_id}", response_model=Ticket,
+    summary="Scan and validate ticket",
+    description="Validates a ticket ID against the active event. If valid and not already used, marks the ticket as 'inside'. Returns 403 for event mismatch or duplicate scans.")
 @limiter.limit("10/minute")
 async def get_ticket(request: Request, ticket_id: str) -> Ticket:
     logger.info(f"[TICKET] Scan request for ticket_id='{ticket_id}'")

@@ -14,6 +14,15 @@ const mapsReadyPromise = new Promise((res, rej) => {
   _rejectMap = rej;
 });
 
+/**
+ * ensureMapsLoaded implements the Singleton Pattern for Google Maps script injection.
+ * 
+ * Logic:
+ * 1. Checks if the global `google.maps` object is already available.
+ * 2. If not, checks if a script with ID 'gmap-script' is already in the DOM.
+ * 3. Uses a shared `mapsReadyPromise` so that concurrent component mounts wait 
+ *    for a single initialization event rather than triggering multiple network requests.
+ */
 function ensureMapsLoaded() {
   // Already loaded
   if (window.google && window.google.maps && window.google.maps.Map) {

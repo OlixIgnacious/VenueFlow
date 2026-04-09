@@ -5,6 +5,8 @@ import { useVenue } from '../context/VenueContext';
 import { useEntryPoints } from '../hooks/useEntryPoints';
 import StaffEntryRow from '../components/StaffEntryRow';
 import VenueMap from '../components/VenueMap';
+import { rtdb } from '../services/firebase';
+import { onValue, ref as dbRef } from 'firebase/database';
 import { Activity, AlertTriangle, LayoutDashboard, Map as MapIcon, RefreshCw, ChevronDown } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
@@ -14,6 +16,7 @@ const StaffDashboard = () => {
   const { entryPoints, loading: entriesLoading } = useEntryPoints(event?.id);
   const [activeTab, setActiveTab] = useState('list');
   const [allEvents, setAllEvents] = useState([]);
+  const [isConnected, setIsConnected] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -28,6 +31,14 @@ const StaffDashboard = () => {
       }
     };
     fetchAllEvents();
+  }, []);
+
+  // Monitor Firebase Connection Status
+  useEffect(() => {
+    const connectedRef = dbRef(rtdb, '.info/connected');
+    return onValue(connectedRef, (snap) => {
+      setIsConnected(snap.val() === true);
+    });
   }, []);
 
   // Sync context if URL event_id changes
@@ -119,9 +130,13 @@ const StaffDashboard = () => {
             <p className="text-slate-500 dark:text-slate-400 text-sm">Monitoring {event?.name}</p>
           </div>
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2 text-xs font-mono bg-white dark:bg-slate-900 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-800 shadow-sm">
-              <RefreshCw size={12} className="text-emerald-600 dark:text-emerald-500 animate-spin-slow" />
-              <span className="text-slate-500 dark:text-slate-400 uppercase">Live Syncing</span>
+            <div className={`flex items-center space-x-2 text-xs font-mono bg-white dark:bg-slate-900 px-3 py-1.5 rounded-full border shadow-sm transition-colors ${
+              isConnected ? 'border-emerald-200 dark:border-emerald-800/30' : 'border-rose-200 dark:border-rose-800/30'
+            }`}>
+              <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+              <span className={`uppercase font-bold ${isConnected ? 'text-emerald-600 dark:text-emerald-500' : 'text-rose-600 dark:text-rose-500'}`}>
+                {isConnected ? 'Live' : 'Reconnecting...'}
+              </span>
             </div>
             <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-sm overflow-hidden flex items-center justify-center">
               <Activity size={20} className="text-slate-400" />

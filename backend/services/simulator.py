@@ -37,6 +37,13 @@ class CrowdSimulator:
     def conference_curve(self, t_min: int) -> float:
         # Morning peak (9am start)
         if -30 <= t_min <= 15: return 0.8
+        
+        # Add "breakout ripples" every 90 minutes (1.5 hours) 
+        # Sessions typical end/start at 10:30, 12:00, 13:30, 15:00, etc.
+        # This simulates the hallway track / coffee breaks.
+        if t_min > 0 and (t_min % 90) < 15:
+            return 0.45 
+
         # Lunch peak (assume 3-4 hours after start)
         if 180 <= t_min <= 240: return 0.7
         # Afternoon session
@@ -55,6 +62,16 @@ class CrowdSimulator:
         return 0.05
 
     def get_density(self, event_type: str, minutes_to_start: int, index: int) -> float:
+        """
+        Calculates normalized crowd density [0.0 - 1.0] using piecewise linear and sinusoidal functions.
+        Each event type (sports, concert, conference) uses a custom mathematical curve to simulate 
+        real-world attendance patterns (e.g., sharp pre-match peaks vs. steady exhibition trickles).
+        
+        Args:
+            event_type: Archetype of the event (determines the curve)
+            minutes_to_start: Time relative to T=0. Negative means pre-event.
+            index: Gate index used to introduce deterministic variance between entry points.
+        """
         # Select curve
         if event_type == "sports_match":
             base = self.sports_match_curve(minutes_to_start)

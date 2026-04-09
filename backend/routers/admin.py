@@ -16,6 +16,12 @@ limiter = Limiter(key_func=get_remote_address)
 
 
 def verify_admin_key(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """
+    Security Contract:
+    Verifies the Bearer token against the ADMIN_API_KEY environment variable.
+    Used as a FastAPI dependency for all protected administrative routes.
+    Throws 403 HTTP error if authentication fails.
+    """
     if credentials.credentials != settings.ADMIN_API_KEY:
         logger.warning("[ADMIN] Rejected request — invalid API key")
         raise HTTPException(status_code=403, detail="Invalid admin API key")
@@ -26,7 +32,9 @@ class ActivateEventRequest(BaseModel):
     event_id: str
 
 
-@router.post("/activate")
+@router.post("/activate",
+    summary="Activate event",
+    description="Changes the system-wide 'active_event' pointer in Firebase. This dictates which event tickets are validated against.")
 @limiter.limit("5/minute")
 async def activate_event(request: Request, event_req: ActivateEventRequest, admin_key: str = Depends(verify_admin_key)):
     event_id = event_req.event_id
@@ -39,7 +47,9 @@ async def activate_event(request: Request, event_req: ActivateEventRequest, admi
     return {"message": f"Event {event_id} is now active", "event": event_data}
 
 
-@router.post("/simulate/tick")
+@router.post("/simulate/tick",
+    summary="Manual simulator tick",
+    description="Forces the Crowd Simulator to update entry point metrics immediately. Used for debugging or demonstrating live updates.")
 @limiter.limit("5/minute")
 async def manual_tick(request: Request, admin_key: str = Depends(verify_admin_key)):
     simulator.update_once()
@@ -47,7 +57,9 @@ async def manual_tick(request: Request, admin_key: str = Depends(verify_admin_ke
     return {"message": "Simulator tick executed manually"}
 
 
-@router.post("/reset-ticket/{ticket_id}")
+@router.post("/reset-ticket/{ticket_id}",
+    summary="Reset ticket status",
+    description="Administrative tool to reset a ticket's status back to 'valid' for re-testing end-to-end flows.")
 @limiter.limit("5/minute")
 async def reset_ticket(request: Request, ticket_id: str, admin_key: str = Depends(verify_admin_key)):
     """Reset a ticket's status back to 'valid' for re-testing."""

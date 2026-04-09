@@ -42,12 +42,16 @@ def mock_firebase_data():
                 "status": "low"
             }
         }
+        mock.get_ticket.return_value = {
+            "event_id": "event_001",
+            "status": "valid",
+            "location_ref": "Seat-101"
+        }
         yield mock
 
-@patch("backend.routers.recommend.gemini_client.generate_recommendation")
-def test_recommendation_fallback(mock_gemini, mock_firebase_data):
+def test_recommendation_fallback(mock_gemini_client, mock_firebase_data):
     # Simulate Gemini failure
-    mock_gemini.return_value = None
+    mock_gemini_client.return_value = None
     
     response = client.get("/api/recommend?ref=Seat-101")
     assert response.status_code == 200

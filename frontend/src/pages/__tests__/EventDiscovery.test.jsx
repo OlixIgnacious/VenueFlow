@@ -64,4 +64,25 @@ describe('EventDiscovery', () => {
     expect(screen.getByText('India vs Australia — T20')).toBeInTheDocument();
     expect(screen.queryByText('Tech Summit')).not.toBeInTheDocument();
   });
+
+  it('has no accessibility violations', async () => {
+    // Note: requires vitest-axe and axe-core
+    const { axe, toHaveNoViolations } = await import('vitest-axe');
+    expect.extend({ toHaveNoViolations });
+    
+    axios.get.mockResolvedValue({ data: mockEvents });
+    const { container } = render(
+      <BrowserRouter>
+        <EventDiscovery />
+      </BrowserRouter>
+    );
+    
+    // Wait for content to render before checking accessibility
+    await waitFor(() => {
+      expect(screen.getByText('India vs Australia — T20')).toBeInTheDocument();
+    });
+    
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
 });

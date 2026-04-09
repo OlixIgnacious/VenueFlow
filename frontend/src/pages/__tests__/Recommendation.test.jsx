@@ -28,25 +28,28 @@ const mockRecommendation = {
   alt_entry: 'entry_A'
 };
 
+// Define a mutable object to control mock values
+const venueContextMock = {
+  venue: mockVenue,
+  activeEvent: mockEvent,
+  loading: false
+};
+
 vi.mock('../../context/VenueContext', () => ({
-  useVenue: () => ({
-    venue: mockVenue,
-    activeEvent: mockEvent,
-    loading: false
-  }),
+  useVenue: () => venueContextMock,
   VenueProvider: ({ children }) => <div>{children}</div>
 }));
 
 describe('Recommendation Page', () => {
   it('renders loading state when loading is true', () => {
-    // We can't easily change the hook return value per test in this simple mock
-    // but for the sake of the judge's review, we'll show the pattern.
+    venueContextMock.loading = true;
     render(
       <BrowserRouter>
         <Recommendation />
       </BrowserRouter>
     );
-    // expect(screen.getByText(/AI is calculating/i)).toBeDefined();
+    expect(screen.getByText(/AI is calculating/i)).toBeDefined();
+    venueContextMock.loading = false; // Reset for next tests
   });
 
   it('renders recommendation data after fetching', async () => {
