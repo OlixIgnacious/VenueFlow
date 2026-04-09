@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+firebase-admin
+google-cloud-secret-manager
+google-generativeai
+pytest
+httpx
+python-dotenv
