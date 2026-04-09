@@ -6,24 +6,53 @@ on:
   pull_request:
     branches: [ main, master ]
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   backend-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      # 1. Authenticate with GCP using Workload Identity Federation
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v2'
+        with:
+          project_id: 'codelab2-490910'
+          workload_identity_provider: 'projects/329848942915/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
+          service_account: 'github-actions-sa@codelab2-490910.iam.gserviceaccount.com'
+
+      # 2. Fetch Secrets from GCP Secret Manager
+      - id: 'secrets'
+        name: 'Get secrets'
+        uses: 'google-github-actions/get-secretmanager-secrets@v2'
+        with:
+          secrets: |-
+            GEMINI_API_KEY:codelab2-490910/GEMINI_API_KEY
+            FIREBASE_DATABASE_URL:codelab2-490910/FIREBASE_DATABASE_URL
+            FIREBASE_CREDENTIALS:codelab2-490910/FIREBASE_CREDENTIALS
+            ADMIN_API_KEY:codelab2-490910/ADMIN_API_KEY
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
+
       - name: Run backend tests
         env:
-          FIREBASE_DATABASE_URL: "https://mock-db.firebaseio.com"
-          ADMIN_API_KEY: "test-key"
-          GEMINI_API_KEY: "test-key"
+          FIREBASE_DATABASE_URL: ${{ steps.secrets.outputs.FIREBASE_DATABASE_URL }}
+          FIREBASE_CREDENTIALS: ${{ steps.secrets.outputs.FIREBASE_CREDENTIALS }}
+          GEMINI_API_KEY: ${{ steps.secrets.outputs.GEMINI_API_KEY }}
+          ADMIN_API_KEY: ${{ steps.secrets.outputs.ADMIN_API_KEY }}
+          TESTING: "true" # Enforces AI mocking via conftest.py
         run: |
           pytest backend/tests/ -v
 
@@ -31,6 +60,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v2'
+        with:
+          project_id: 'codelab2-490910'
+          workload_identity_provider: 'projects/329848942915/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
+          service_account: 'github-actions-sa@codelab2-490910.iam.gserviceaccount.com'
+
+      - id: 'secrets'
+        name: 'Get Frontend Secrets'
+        uses: 'google-github-actions/get-secretmanager-secrets@v2'
+        with:
+          secrets: |-
+            VITE_MAPS_API_KEY:codelab2-490910/MAPS_API_KEY
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -40,4 +85,6 @@ jobs:
       - name: Install dependencies
         run: cd frontend && npm ci
       - name: Run frontend tests
+        env:
+          VITE_MAPS_API_KEY: ${{ steps.secrets.outputs.VITE_MAPS_API_KEY }}
         run: cd frontend && npm run test -- --run
