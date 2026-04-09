@@ -1,13 +1,13 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from backend.services.firebase_client import firebase_client
 from backend.models import VenueConfig, EventConfig
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 router = APIRouter()
 
 @router.get("/current")
-async def get_current_venue_and_event():
-    active_event_id = firebase_client.get_active_event_id()
+async def get_current_venue_and_event(event_id: Optional[str] = Query(None)):
+    active_event_id = event_id or firebase_client.get_active_event_id()
     if not active_event_id:
         raise HTTPException(status_code=404, detail="No active event found")
 

@@ -1,8 +1,9 @@
 import logging
 import time
 from fastapi import APIRouter, HTTPException, Query, Request
-from typing import Optional
+from typing import Optional, Any
 from slowapi import Limiter
+from cachetools import TTLCache
 from slowapi.util import get_remote_address
 from backend.services.firebase_client import firebase_client
 from backend.services.gemini_client import gemini_client
@@ -14,9 +15,9 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 limiter = Limiter(key_func=get_remote_address)
 
-# Simple in-memory cache: (event_id, ref) -> (timestamp, recommendation_data)
-_recommendation_cache = {}
-CACHE_TTL = 300  # 5 minutes — reduces repeated Gemini calls on free-tier key
+# Memory-safe in-memory cache: (event_id, ref) -> recommendation_data
+CACHE_TTL = 300  # 5 minutes
+_recommendation_cache = TTLCache(maxsize=500, ttl=CACHE_TTL)
 
 
 @router.get("/", response_model=Recommendation)
@@ -25,7 +26,7 @@ async def get_recommendation(
     request: Request,
     ref: str,
     event_id: Optional[str] = Query(None)
-):
+) -> Recommendation:
     logger.info(f"[RECOMMEND] Request for ref='{ref}' event_id='{event_id}'")
 
     # ── 1. Resolve active event ───────────────────────────────────────────────
@@ -37,16 +38,29 @@ async def get_recommendation(
         logger.error("[RECOMMEND] No active event found in Firebase — returning 404")
         raise HTTPException(status_code=404, detail="No active event found")
 
+    # ── 1b. Validate Ticket ID (ref) ──────────────────────────────────────────
+    ticket_data = firebase_client.get_ticket(ref)
+    if not ticket_data:
+        logger.warning(f"[RECOMMEND] Invalid ticket ID ref='{ref}'")
+        raise HTTPException(
+            status_code=403, 
+            detail="Invalid ticket ID: The provided reference does not match any known ticket. Please recheck and try again."
+        )
+    
+    # Optional: Cross-check event_id
+    if ticket_data.get('event_id') != event_id:
+        logger.warning(f"[RECOMMEND] Ticket {ref} belongs to {ticket_data.get('event_id')}, not {event_id}")
+        raise HTTPException(
+            status_code=403,
+            detail="Ticket mismatch: This ticket is not valid for the selected event."
+        )
+
     # ── 2. Cache check ────────────────────────────────────────────────────────
     cache_key = (event_id, ref)
     if cache_key in _recommendation_cache:
-        timestamp, cached_data = _recommendation_cache[cache_key]
-        age = time.time() - timestamp
-        if age < CACHE_TTL:
-            logger.info(f"[RECOMMEND] Cache HIT (age={age:.1f}s) — returning cached result")
-            return Recommendation(**cached_data)
-        else:
-            logger.debug(f"[RECOMMEND] Cache EXPIRED (age={age:.1f}s)")
+        cached_data = _recommendation_cache[cache_key]
+        logger.info("[RECOMMEND] Cache HIT — returning cached result")
+        return Recommendation(**cached_data)
 
     # ── 3. Fetch context from Firebase ────────────────────────────────────────
     logger.info(f"[RECOMMEND] Fetching event data for event_id='{event_id}'")
@@ -99,7 +113,7 @@ async def get_recommendation(
             "tip": "AI recommendation is currently unavailable, using real-time sensor data.",
         }
     else:
-        _recommendation_cache[cache_key] = (time.time(), recommendation_data)
+        _recommendation_cache[cache_key] = recommendation_data
         logger.info(
             f"[RECOMMEND] AI success — recommended_entry='{recommendation_data.get('recommended_entry')}'"
         )

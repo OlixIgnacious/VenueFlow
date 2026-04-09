@@ -86,8 +86,15 @@ class CrowdSimulator:
             return
 
         event_type = event_data.get('type')
-        start_time = datetime.fromisoformat(event_data.get('start_time'))
-        now = datetime.now(timezone.utc if start_time.tzinfo else None)
+        # Parse ISO format, ensuring we handle Z as UTC
+        start_time_str = event_data.get('start_time', '').replace('Z', '+00:00')
+        start_time = datetime.fromisoformat(start_time_str)
+        
+        # Ensure 'now' has the same timezone awareness as 'start_time'
+        if start_time.tzinfo:
+            now = datetime.now(timezone.utc)
+        else:
+            now = datetime.now()
         
         minutes_to_start = int((now - start_time).total_seconds() / 60)
 
@@ -98,7 +105,12 @@ class CrowdSimulator:
         updated_entry_points = {}
         for index, (eid, data) in enumerate(entry_points.items()):
             density = self.get_density(event_type, minutes_to_start, index)
-            wait = int(density * 20) # Max 20 min wait
+            capacity = data.get('capacity', 500)
+            current_count = int(density * capacity)
+            
+            # Refined wait time: roughly 1 minute for every 15 people in line
+            wait = int(current_count / 15) + 1
+            
             status = "low"
             if density > 0.7: status = "high"
             elif density > 0.4: status = "moderate"
@@ -106,7 +118,7 @@ class CrowdSimulator:
             data['density'] = round(density, 2)
             data['wait_minutes'] = wait
             data['status'] = status
-            data['current_count'] = int(density * data.get('capacity', 500))
+            data['current_count'] = current_count
             updated_entry_points[eid] = data
 
         firebase_client.set_entry_points(self.active_event_id, updated_entry_points)

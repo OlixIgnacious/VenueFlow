@@ -53,7 +53,7 @@ const Recommendation = () => {
         const status = err?.response?.status;
         const detail = err?.response?.data?.detail || err.message;
         console.error(`[Recommendation] API error — HTTP ${status}: ${detail}`);
-        setError(`Failed to get recommendation (${status ? `HTTP ${status}: ${detail}` : detail})`);
+        setError(detail);
       } finally {
         setLoading(false);
       }
@@ -93,26 +93,26 @@ const Recommendation = () => {
     <div className="max-w-xl mx-auto p-6 min-h-screen space-y-8 pb-12 animate-in fade-in duration-500">
       <button 
         onClick={() => navigate(-1)}
-        className="flex items-center text-slate-400 hover:text-white transition-colors"
+        className="flex items-center text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-white transition-colors"
       >
         <ArrowLeft size={18} className="mr-2" />
         <span>Back</span>
       </button>
 
       <div className="space-y-2">
-        <h2 className="text-slate-400 font-medium uppercase tracking-widest text-sm flex items-center">
-          <Sparkles size={14} className="mr-2 text-blue-400" />
+        <h2 className="text-slate-500 dark:text-slate-400 font-medium uppercase tracking-widest text-sm flex items-center">
+          <Sparkles size={14} className="mr-2 text-blue-600 dark:text-blue-400" />
           AI Recommendation
         </h2>
-        <h1 className="text-3xl font-bold">Your Optimal {venue?.entry_label}</h1>
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Your Optimal {venue?.entry_label}</h1>
       </div>
 
       <div aria-live="polite">
         {recommendedEntry && (
           <EntryPointCard 
             label={recommendedEntry.label}
-            waitMinutes={recommendedEntry.wait_minutes}
-            crowdLevel={recommendedEntry.status}
+            wait_minutes={recommendedEntry.wait_minutes}
+            status={recommendedEntry.status}
             reason={recommendation.reason}
             tip={recommendation.tip}
             isRecommended={true}
@@ -127,15 +127,15 @@ const Recommendation = () => {
           </h3>
           <EntryPointCard 
             label={altEntry.label}
-            waitMinutes={altEntry.wait_minutes}
-            crowdLevel={altEntry.status}
+            wait_minutes={altEntry.wait_minutes}
+            status={altEntry.status}
             reason={`If you prefer a different route, ${altEntry.label} is also available.`}
           />
         </div>
       )}
 
       {/* Map Integration */}
-      <div className="h-80 bg-slate-900/60 rounded-3xl border border-slate-800 overflow-hidden shadow-2xl relative">
+      <div className="h-80 bg-white dark:bg-slate-900/60 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xl relative">
         <ErrorBoundary>
           <VenueMap 
             venue={venue} 
@@ -144,7 +144,7 @@ const Recommendation = () => {
             userLocation={userLocation}
           />
         </ErrorBoundary>
-        <div className="absolute bottom-4 left-4 glass px-3 py-1.5 rounded-full text-xs font-bold text-blue-400 flex items-center shadow-lg pointer-events-none">
+        <div className="absolute bottom-4 left-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-bold text-blue-600 dark:text-blue-400 flex items-center shadow-lg border border-slate-200 dark:border-slate-800 pointer-events-none">
           <Navigation size={12} className="mr-1.5" />
           WALKING ROUTE
         </div>

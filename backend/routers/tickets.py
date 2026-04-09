@@ -13,7 +13,7 @@ limiter = Limiter(key_func=get_remote_address)
 
 @router.get("/{ticket_id}", response_model=Ticket)
 @limiter.limit("10/minute")
-async def get_ticket(request: Request, ticket_id: str):
+async def get_ticket(request: Request, ticket_id: str) -> Ticket:
     logger.info(f"[TICKET] Scan request for ticket_id='{ticket_id}'")
 
     ticket_data = firebase_client.get_ticket(ticket_id)

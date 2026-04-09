@@ -41,19 +41,19 @@ const EventDiscovery = () => {
 
   return (
     <div className="min-h-screen p-6 md:p-12 max-w-6xl mx-auto space-y-12">
-      <div className="space-y-4 text-center">
-        <h1 className="text-5xl font-bold tracking-tight">Find Your <span className="text-blue-500">Event</span></h1>
-        <p className="text-slate-400 text-lg max-w-2xl mx-auto">
+      <div className="space-y-4 text-center border-b border-slate-200 dark:border-slate-800 pb-12">
+        <h1 className="text-5xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Find Your <span className="text-blue-600 dark:text-blue-500">Event</span></h1>
+        <p className="text-slate-600 dark:text-slate-400 text-lg max-w-2xl mx-auto font-medium">
           Select your event to access smart routing and crowd intelligence recommendations.
         </p>
       </div>
 
       <div className="relative max-w-2xl mx-auto">
-        <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-500" size={24} />
+        <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={24} />
         <input 
           type="text" 
           placeholder="Search by name, sport, or type..." 
-          className="w-full bg-slate-900/50 border border-slate-700 rounded-3xl py-6 pl-16 pr-8 text-xl outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+          className="w-full bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-3xl py-6 pl-16 pr-8 text-xl outline-none focus:ring-2 focus:ring-blue-500/50 transition-all text-slate-900 dark:text-slate-100 shadow-sm"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
@@ -64,27 +64,27 @@ const EventDiscovery = () => {
           <div 
             key={id} 
             onClick={() => navigate(`/entry?event_id=${id}`)}
-            className="group glass rounded-3xl overflow-hidden cursor-pointer hover:border-blue-500/50 transition-all hover:translate-y-[-4px]"
+            className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden cursor-pointer hover:border-blue-500/50 transition-all hover:translate-y-[-4px] shadow-md hover:shadow-xl"
           >
-            <div className="h-48 bg-slate-800 relative">
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 to-transparent opacity-60" />
+            <div className="h-48 bg-slate-100 dark:bg-slate-800 relative">
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 to-transparent opacity-60 dark:opacity-80" />
               <div className="absolute bottom-6 left-6 right-6">
-                 <span className="bg-blue-600 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">{event.type.replace('_', ' ')}</span>
-                 <h2 className="text-xl font-bold mt-2 leading-tight">{event.name}</h2>
+                 <span className="bg-blue-600 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest text-white shadow-lg">{event.type.replace('_', ' ')}</span>
+                 <h2 className="text-xl font-bold mt-2 leading-tight text-white">{event.name}</h2>
               </div>
             </div>
             <div className="p-6 space-y-4">
               <div className="space-y-2">
-                <div className="flex items-center text-slate-400 text-sm space-x-2">
+                <div className="flex items-center text-slate-500 dark:text-slate-400 text-sm space-x-2">
                   <Calendar size={14} />
                   <span>{new Date(event.start_time).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
                 </div>
-                <div className="flex items-center text-slate-400 text-sm space-x-2">
+                <div className="flex items-center text-slate-500 dark:text-slate-400 text-sm space-x-2">
                   <MapPin size={14} />
                   <span>{event.venue_name || 'Venue TBD'}</span>
                 </div>
               </div>
-              <div className="pt-4 border-t border-slate-800 flex items-center justify-between text-blue-400 font-bold">
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-blue-600 dark:text-blue-400 font-bold">
                 <span>Access Dashboard</span>
                 <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
               </div>

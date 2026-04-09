@@ -7,11 +7,46 @@ const TicketScanner = ({ onScan, onClose, event_id }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const handleEsc = (e) => {
+    const originalFocus = document.activeElement;
+    const modal = document.querySelector('[role="dialog"]');
+    if (modal) {
+      const focusableSelectors = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+      const focusableElements = modal.querySelectorAll(focusableSelectors);
+      if (focusableElements.length > 0) {
+        focusableElements[0].focus();
+      }
+    }
+
+    const handleKeydown = (e) => {
       if (e.key === 'Escape') onClose();
+      
+      if (e.key === 'Tab' && modal) {
+        const focusableSelectors = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+        const focusableElements = Array.from(modal.querySelectorAll(focusableSelectors));
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (e.shiftKey) { // Shift + Tab
+          if (document.activeElement === firstElement) {
+            lastElement.focus();
+            e.preventDefault();
+          }
+        } else { // Tab
+          if (document.activeElement === lastElement) {
+            firstElement.focus();
+            e.preventDefault();
+          }
+        }
+      }
     };
-    window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
+
+    window.addEventListener('keydown', handleKeydown);
+    return () => {
+      window.removeEventListener('keydown', handleKeydown);
+      if (originalFocus && typeof originalFocus.focus === 'function') {
+        originalFocus.focus();
+      }
+    };
   }, [onClose]);
 
   const handleSimulateScan = (id) => {

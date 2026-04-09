@@ -25,6 +25,10 @@ logger = logging.getLogger("venueflow")
 # ─── App Lifecycle ────────────────────────────────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    if not settings.ADMIN_API_KEY:
+        logger.error("[CRITICAL] ADMIN_API_KEY is not set. Admin endpoints will be unusable.")
+        raise RuntimeError("ADMIN_API_KEY environment variable is required.")
+        
     logger.info("VenueFlow API starting up")
     simulator.start()
     yield
@@ -38,12 +42,7 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # ─── CORS — allow both localhost & 127.0.0.1 ──────────────────────────────────
-ALLOWED_ORIGINS = [
-    settings.ALLOWED_ORIGIN,          # from .env  (e.g. http://localhost:5173)
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://localhost:3000",
-]
+ALLOWED_ORIGINS = [settings.ALLOWED_ORIGIN] if settings.ALLOWED_ORIGIN else ["http://localhost:5173"]
 logger.info(f"CORS allow_origins: {ALLOWED_ORIGINS}")
 app.add_middleware(
     CORSMiddleware,

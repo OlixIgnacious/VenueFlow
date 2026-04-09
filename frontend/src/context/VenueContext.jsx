@@ -15,27 +15,21 @@ export const VenueProvider = ({ children }) => {
     try {
       setLoading(true);
       
-      // Persist eventId if provided, or retrieve from session if not
+      // Retrieval hierarchy: 1. Manual param, 2. sessionStorage, 3. Backend default
       if (eventId) {
         sessionStorage.setItem('active_event_id', eventId);
       } else {
         eventId = sessionStorage.getItem('active_event_id');
       }
-
-      const url = eventId 
-        ? `${API_BASE_URL}/api/events/list` 
-        : `${API_BASE_URL}/api/venue/current`;
       
-      const response = await axios.get(url);
+      const response = await axios.get(`${API_BASE_URL}/api/venue/current`, {
+        params: eventId ? { event_id: eventId } : {}
+      });
       
-      // If eventId provided, we filter from the list
-      const data = eventId ? { 
-        event: { ...response.data[eventId], id: eventId }, 
-        venue: await axios.get(`${API_BASE_URL}/api/venue/current`).then(r => r.data.venue)
-      } : response.data;
+      const { venue: venueData, event: eventData } = response.data;
 
-      setVenue(data.venue);
-      setEvent(data.event);
+      setVenue(venueData);
+      setEvent(eventData);
       setError(null);
     } catch (err) {
       console.error('FetchConfig error:', err);

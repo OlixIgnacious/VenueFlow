@@ -1,6 +1,6 @@
 import sys
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 # Add parent directory to sys.path to import backend modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -38,14 +38,16 @@ def seed():
             "name": "India vs Australia — T20",
             "type": "sports_match",
             "venue_id": "venue_001",
-            "start_time": (datetime.now() + timedelta(hours=2)).isoformat(),
+            "venue_name": "M. Chinnaswamy Stadium",
+            "start_time": (datetime.now(timezone.utc) + timedelta(hours=2)).isoformat(),
             "status": "upcoming"
         },
         "event_002": {
             "name": "Bengaluru Tech Summit 2026",
             "type": "conference",
             "venue_id": "venue_002",
-            "start_time": (datetime.now() + timedelta(days=5)).isoformat(),
+            "venue_name": "Bangalore International Exhibition Centre",
+            "start_time": (datetime.now(timezone.utc) + timedelta(days=5)).isoformat(),
             "status": "upcoming"
         }
     }

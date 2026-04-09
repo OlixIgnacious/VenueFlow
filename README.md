@@ -59,9 +59,12 @@ The system is seeded with two distinct contexts:
 Switching between these via the Admin API instantly updates all UI labels, the Gemini prompt context, and the simulator's crowd behavior curve.
 
 ## 📝 Assumptions
-- Entry point density is simulated using mathematical models based on event type start times.
-- No authentication is implemented for the staff dashboard as this is a hackathon prototype.
-- Maps coordinates for entry points are approximate.
+- **Crowd density is simulated.** Real deployments would use IoT sensors (infrared counters, camera CV models) at each entry point in place of `simulator.py`.
+- **Ticket scanner is a simulation.** The QR UI does not use the device camera. Production would use `html5-qrcode` or ruggedised handheld scanners over venue Wi-Fi/LTE.
+- **No attendee authentication.** The flow requires only a ticket ID. Production would add identity verification to prevent ticket sharing.
+- **Entry point coordinates are approximate.** Lat/lng are computed as stadium centre ± offset. Real deployments would GPS-survey each gate precisely.
+- **Single active event at a time.** Multi-venue concurrent support would require per-venue Firebase namespacing and horizontal API scaling.
+- **Wait time is capacity-relative.** `wait = int(current_count / 15) + 1` assumes a throughput of ~15 people/minute per gate. A real system would calibrate throughput from historical scan-rate data.
 
 ---
 **Hackathon Submission** — *Built for Google Antigravity Challenge*

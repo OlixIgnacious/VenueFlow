@@ -1,6 +1,8 @@
 import logging
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from pydantic import BaseModel
 from backend.services.firebase_client import firebase_client
 from backend.services.simulator import simulator
@@ -10,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 security = HTTPBearer()
+limiter = Limiter(key_func=get_remote_address)
 
 
 def verify_admin_key(credentials: HTTPAuthorizationCredentials = Depends(security)):
@@ -24,8 +27,9 @@ class ActivateEventRequest(BaseModel):
 
 
 @router.post("/activate")
-async def activate_event(request: ActivateEventRequest, admin_key: str = Depends(verify_admin_key)):
-    event_id = request.event_id
+@limiter.limit("5/minute")
+async def activate_event(request: Request, event_req: ActivateEventRequest, admin_key: str = Depends(verify_admin_key)):
+    event_id = event_req.event_id
     logger.info(f"[ADMIN] Activating event_id='{event_id}'")
     event_data = firebase_client.get_event(event_id)
     if not event_data:
@@ -36,14 +40,16 @@ async def activate_event(request: ActivateEventRequest, admin_key: str = Depends
 
 
 @router.post("/simulate/tick")
-async def manual_tick(admin_key: str = Depends(verify_admin_key)):
+@limiter.limit("5/minute")
+async def manual_tick(request: Request, admin_key: str = Depends(verify_admin_key)):
     simulator.update_once()
     logger.info("[ADMIN] Manual simulator tick executed")
     return {"message": "Simulator tick executed manually"}
 
 
 @router.post("/reset-ticket/{ticket_id}")
-async def reset_ticket(ticket_id: str, admin_key: str = Depends(verify_admin_key)):
+@limiter.limit("5/minute")
+async def reset_ticket(request: Request, ticket_id: str, admin_key: str = Depends(verify_admin_key)):
     """Reset a ticket's status back to 'valid' for re-testing."""
     ticket_data = firebase_client.get_ticket(ticket_id)
     if not ticket_data:

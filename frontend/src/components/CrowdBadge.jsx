@@ -10,11 +10,15 @@ const CrowdBadge = ({ level }) => {
   };
 
   return (
-    <span className={twMerge(
-      "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border",
-      styles[level] || styles.low
-    )}>
-      {level}
+    <span 
+      className={twMerge(
+        "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border",
+        styles[level] || styles.low
+      )}
+      aria-label={`Crowd density: ${level}`}
+    >
+      <span className="sr-only">Status: </span>
+      {level || "low"}
     </span>
   );
 };
