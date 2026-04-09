@@ -57,32 +57,56 @@ create_secret "ADMIN_API_KEY" "${ADMIN_KEY//\'/}"
 # 3. Setup Workload Identity Federation
 echo "🔗 Setting up Workload Identity Federation..."
 
-gcloud iam workload-identity-pools create "github-pool" \
-    --project="${PROJECT_ID}" \
-    --location="global" \
-    --display-name="GitHub Actions Pool"
+# Create Pool if it doesn't exist
+if ! gcloud iam workload-identity-pools describe "github-pool" --location="global" --project="${PROJECT_ID}" >/dev/null 2>&1; then
+    gcloud iam workload-identity-pools create "github-pool" \
+        --project="${PROJECT_ID}" \
+        --location="global" \
+        --display-name="GitHub Actions Pool"
+else
+    echo "Workload Identity Pool 'github-pool' already exists."
+fi
 
-gcloud iam workload-identity-pools providers create-oidc "github-provider" \
-    --project="${PROJECT_ID}" \
-    --location="global" \
-    --workload-identity-pool="github-pool" \
-    --display-name="GitHub Actions Provider" \
-    --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository" \
-    --issuer-uri="https://token.actions.githubusercontent.com"
+# Create/Update Provider
+if ! gcloud iam workload-identity-pools providers describe "github-provider" --location="global" --workload-identity-pool="github-pool" --project="${PROJECT_ID}" >/dev/null 2>&1; then
+    gcloud iam workload-identity-pools providers create-oidc "github-provider" \
+        --project="${PROJECT_ID}" \
+        --location="global" \
+        --workload-identity-pool="github-pool" \
+        --display-name="GitHub Actions Provider" \
+        --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository" \
+        --attribute-condition="assertion.repository == '${REPO}'" \
+        --issuer-uri="https://token.actions.githubusercontent.com"
+else
+    echo "Updating existing Workload Identity Provider 'github-provider'..."
+    gcloud iam workload-identity-pools providers update-oidc "github-provider" \
+        --project="${PROJECT_ID}" \
+        --location="global" \
+        --workload-identity-pool="github-pool" \
+        --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository" \
+        --attribute-condition="assertion.repository == '${REPO}'" \
+        --issuer-uri="https://token.actions.githubusercontent.com"
+fi
 
 # 4. Create Service Account and Bind
-echo "👤 Creating Service Account..."
-gcloud iam service-accounts create "github-actions-sa" \
-    --project="${PROJECT_ID}" \
-    --display-name="GitHub Actions Service Account"
+echo "👤 Setting up Service Account..."
+if ! gcloud iam service-accounts describe "github-actions-sa@${PROJECT_ID}.iam.gserviceaccount.com" --project="${PROJECT_ID}" >/dev/null 2>&1; then
+    gcloud iam service-accounts create "github-actions-sa" \
+        --project="${PROJECT_ID}" \
+        --display-name="GitHub Actions Service Account"
+else
+    echo "Service account 'github-actions-sa' already exists."
+fi
 
 gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
     --member="serviceAccount:github-actions-sa@${PROJECT_ID}.iam.gserviceaccount.com" \
-    --role="roles/secretmanager.secretAccessor"
+    --role="roles/secretmanager.secretAccessor" \
+    --quiet
 
 gcloud iam service-accounts add-iam-policy-binding "github-actions-sa@${PROJECT_ID}.iam.gserviceaccount.com" \
     --project="${PROJECT_ID}" \
     --role="roles/iam.workloadIdentityUser" \
-    --member="principalSet://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/github-pool/attribute.repository/${REPO}"
+    --member="principalSet://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/github-pool/attribute.repository/${REPO}" \
+    --quiet
 
 echo "✅ Setup Complete!"
