@@ -55,4 +55,7 @@ class FirebaseClient:
     def get_ticket(self, ticket_id: str):
         return db.reference(f'/tickets/{ticket_id}').get()
 
+    def update_ticket_status(self, ticket_id: str, status: str):
+        db.reference(f'/tickets/{ticket_id}').update({'status': status})
+
 firebase_client = FirebaseClient()

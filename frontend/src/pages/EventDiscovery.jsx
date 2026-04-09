@@ -81,7 +81,7 @@ const EventDiscovery = () => {
                 </div>
                 <div className="flex items-center text-slate-400 text-sm space-x-2">
                   <MapPin size={14} />
-                  <span>{event.venue_id === 'venue_001' ? 'M. Chinnaswamy Stadium' : 'BIEC Hall'}</span>
+                  <span>{event.venue_name || 'Venue TBD'}</span>
                 </div>
               </div>
               <div className="pt-4 border-t border-slate-800 flex items-center justify-between text-blue-400 font-bold">

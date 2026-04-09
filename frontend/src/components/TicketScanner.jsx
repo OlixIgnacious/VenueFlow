@@ -1,10 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { QrCode, X, Search, CheckCircle2, Loader2 } from 'lucide-react';
 
 const TicketScanner = ({ onScan, onClose, event_id }) => {
   const [typingId, setTypingId] = useState('');
   const [validating, setValidating] = useState(false);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [onClose]);
 
   const handleSimulateScan = (id) => {
     setTypingId(id);
@@ -28,15 +36,22 @@ const TicketScanner = ({ onScan, onClose, event_id }) => {
     }
   };
 
-  const sampleIds = event_id === 'event_001' ? ['IND-AUS-101'] : ['TECH-SUMMIT-01'];
+  const sampleIds = event_id === 'event_001'
+    ? ['IND-AUS-101', 'IND-AUS-102', 'IND-AUS-103', 'IND-AUS-104', 'IND-AUS-105', 'IND-AUS-VIP-01']
+    : ['TECH-SUMMIT-01', 'TECH-SUMMIT-02', 'TECH-SUMMIT-03', 'TECH-SUMMIT-04', 'TECH-SUMMIT-05', 'TECH-SUMMIT-SPEAKER-01'];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-300">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-300"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="scanner-title"
+    >
       <div className="w-full max-w-md glass rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
         <div className="p-6 border-b border-slate-800 flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <QrCode className="text-blue-500" size={20} />
-            <h3 className="font-bold text-lg">Ticket Scanner</h3>
+            <h3 id="scanner-title" className="font-bold text-lg">Ticket Scanner</h3>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-slate-800 rounded-full transition-colors">
             <X size={20} className="text-slate-400" />

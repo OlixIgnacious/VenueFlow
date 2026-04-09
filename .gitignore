@@ -211,6 +211,7 @@ docs/
 node_modules/
 frontend/node_modules/
 judgement.md
+thingstodo.md
 backend/pytest.ini
 .pytest_cache/
 backend/.pytest_cache/
@@ -219,4 +220,12 @@ frontend/coverage/
 # Secrets
 *-firebase-adminsdk-*.json
 
+
+
+# Safe storage for credentials
+credentials/
+
+
+# Testing artifacts
+docs/test_tickets.json
 

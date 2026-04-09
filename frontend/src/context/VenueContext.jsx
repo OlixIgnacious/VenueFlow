@@ -14,22 +14,31 @@ export const VenueProvider = ({ children }) => {
   const fetchConfig = async (eventId = null) => {
     try {
       setLoading(true);
+      
+      // Persist eventId if provided, or retrieve from session if not
+      if (eventId) {
+        sessionStorage.setItem('active_event_id', eventId);
+      } else {
+        eventId = sessionStorage.getItem('active_event_id');
+      }
+
       const url = eventId 
-        ? `${API_BASE_URL}/api/events/list` // In a real app, this would be /api/events/{id}
+        ? `${API_BASE_URL}/api/events/list` 
         : `${API_BASE_URL}/api/venue/current`;
       
       const response = await axios.get(url);
       
-      // If eventId provided, we filter from the list for now (mocking specific endpoint)
+      // If eventId provided, we filter from the list
       const data = eventId ? { 
         event: { ...response.data[eventId], id: eventId }, 
-        venue: await axios.get(`${API_BASE_URL}/api/venue/current`).then(r => r.data.venue) // Placeholder for venue fetch
+        venue: await axios.get(`${API_BASE_URL}/api/venue/current`).then(r => r.data.venue)
       } : response.data;
 
       setVenue(data.venue);
       setEvent(data.event);
       setError(null);
     } catch (err) {
+      console.error('FetchConfig error:', err);
       setError('Failed to load configuration');
     } finally {
       setLoading(false);

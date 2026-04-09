@@ -6,11 +6,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Settings(BaseSettings):
-    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
-    MAPS_API_KEY: str = os.getenv("MAPS_API_KEY", "")
-    FIREBASE_DATABASE_URL: str = os.getenv("FIREBASE_DATABASE_URL", "")
-    FIREBASE_CREDENTIALS: str = os.getenv("FIREBASE_CREDENTIALS", "")
-    ALLOWED_ORIGIN: str = os.getenv("ALLOWED_ORIGIN", "http://localhost:5173")
+    GEMINI_API_KEY: str = ""
+    MAPS_API_KEY: str = ""
+    FIREBASE_DATABASE_URL: str = ""
+    FIREBASE_CREDENTIALS: str = ""
+    ALLOWED_ORIGIN: str = "http://localhost:5173"
+    ADMIN_API_KEY: str = "venueflow-secret-2026"  # Default for demo
 
     @property
     def firebase_creds_dict(self):

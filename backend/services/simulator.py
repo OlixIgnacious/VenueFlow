@@ -22,6 +22,7 @@ class CrowdSimulator:
         if -60 <= t_min < -15: return 0.4 + (t_min + 60) * 0.01 # Sharp ramp to 0.85
         if -15 <= t_min < 0: return 0.85 # Peak
         if 0 <= t_min < 20: return 0.85 - (t_min * 0.03) # Sharp drop after kick-off
+        if 20 <= t_min < 40: return 0.25 - (t_min - 20) * 0.0075 # Smooth trickle to 0.1
         if 40 <= t_min < 50: return 0.3 + 0.2 * math.sin((t_min - 40) * math.pi / 10) # Half-time peak
         if t_min > 90: return 0.9 # Exit spike
         return 0.1 # During match trickle

@@ -20,6 +20,7 @@ class EventConfig(BaseModel):
     name: str
     type: str # sports_match, concert, conference, exhibition, ceremony
     venue_id: str
+    venue_name: Optional[str] = None
     start_time: datetime
     status: str # upcoming, live, ended
 
@@ -52,4 +53,5 @@ class Ticket(BaseModel):
     persons: int
     location_ref: str # The value to be used as ref for recommendation (Seat/Row/Zone)
     venue_address: str
+    status: str = "valid" # valid, inside, void
 
