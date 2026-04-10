@@ -52,13 +52,50 @@ Labels like "Gate", "Door", or "Pavilion" are injected via configuration — zer
 
 ## 📸 Visual Showcase
 
-````carousel
-![Staff Dashboard View](file:///Users/olixstudios/.gemini/antigravity/brain/64131bd9-e40c-44c1-8006-cb99c004bd74/staff_dashboard_final_1775770142198.png)
-<!-- slide -->
-![AI Recommendation Flow](file:///Users/olixstudios/.gemini/antigravity/brain/64131bd9-e40c-44c1-8006-cb99c004bd74/recommendation_page_1775770142198.png)
-<!-- slide -->
-![Real-time Heatmap](file:///Users/olixstudios/.gemini/antigravity/brain/64131bd9-e40c-44c1-8006-cb99c004bd74/staff_dashboard_initial_1775764748325.png)
-````
+<div align="center">
+  <img src="docs/assets/staff_dashboard.png" width="800" alt="Staff Dashboard" />
+  <p><i>Real-time crowd monitoring and operator dashboard.</i></p>
+  
+  <img src="docs/assets/recommendation.png" width="800" alt="Attendee Recommendations" />
+  <p><i>AI-powered entry point suggestions for attendees.</i></p>
+  
+  <img src="docs/assets/heatmap.png" width="800" alt="Crowd Heatmap" />
+  <p><i>Geographic heatmapping for active congestion monitoring.</i></p>
+</div>
+
+---
+
+## ⚡ Quick Start
+
+### 1. External Services Setup
+- **Firebase**: Create a project and enable **Realtime Database** (Test Mode). Generate a Service Account JSON.
+- **Google Maps**: Enable **Maps JavaScript API** and **Directions API**.
+- **Gemini**: Obtain an API key from [Google AI Studio](https://aistudio.google.com/).
+
+### 2. Environment Configuration
+Create a `.env` file in the root directory:
+```env
+# Backend
+GEMINI_API_KEY=your_gemini_key
+FIREBASE_DATABASE_URL=https://your-project.firebaseio.com
+FIREBASE_CREDENTIALS={"type": "service_account", ...}
+
+# Frontend (Vite)
+VITE_MAPS_API_KEY=your_maps_key
+VITE_FIREBASE_API_KEY=your_firebase_key
+VITE_FIREBASE_DATABASE_URL=https://your-project.firebaseio.com
+VITE_FIREBASE_PROJECT_ID=your_project_id
+```
+
+### 3. Build & Run
+```bash
+# Backend Installation
+pip install -r backend/requirements.txt
+uvicorn backend.main:app --reload
+
+# Frontend Installation
+cd frontend && npm install && npm run dev
+```
 
 ---
 
@@ -72,13 +109,12 @@ Labels like "Gate", "Door", or "Pavilion" are injected via configuration — zer
 
 ---
 
-## 📁 Sub-System Documentation
+## 📁 Detailed Documentation
 
-| Component | Description | README |
-| :--- | :--- | :--- |
-| **Backend** | Python API, Simulator, AI Orchestration | [Explore Backend](backend/README.md) |
-| **Frontend** | React SPA, Google Maps Integration | [Explore Frontend](frontend/README.md) |
-| **Infrastructure** | Docker & Deployment Guides | [Explore Docs](docs/README.md) |
+For full setup and deployment details, refer to the [Documentation Hub](docs/README.md):
+- 📘 [Firebase Setup Guide](docs/firebase_setup_guide.md)
+- 📗 [GCP & Secret Manager Guide](docs/gcp_setup_guide.md)
+- 📙 [Google Maps API Guide](docs/google_maps_setup_guide.md)
 
 ---
 
