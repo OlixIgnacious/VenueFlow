@@ -32,7 +32,7 @@ const mockRecommendation = {
 // Define a mutable object to control mock values
 const venueContextMock = {
   venue: mockVenue,
-  activeEvent: mockEvent,
+  event: mockEvent,
   loading: false
 };
 

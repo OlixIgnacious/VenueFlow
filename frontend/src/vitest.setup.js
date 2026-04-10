@@ -11,6 +11,8 @@ Object.defineProperty(window, 'crypto', {
       }
       return arr;
     },
+    subtle: {},
+    randomUUID: () => '12345678-1234-4321-8765-123456789012'
   },
 });
 
