@@ -1,12 +1,10 @@
-import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 from fastapi.testclient import TestClient
 from backend.main import app
 
 client = TestClient(app)
 
-@pytest.mark.asyncio
-async def test_get_ticket_success():
+def test_get_ticket_success():
     mock_ticket = {
         "event_id": "event_001",
         "event_name": "India vs Australia",
@@ -15,7 +13,7 @@ async def test_get_ticket_success():
         "location_ref": "Block B, Row 12",
         "venue_address": "Cubbon Park, Bengaluru"
     }
-    
+
     with patch("backend.services.firebase_client.firebase_client.get_ticket", return_value=mock_ticket):
         response = client.get("/api/tickets/IND-AUS-101")
         assert response.status_code == 200
@@ -23,8 +21,7 @@ async def test_get_ticket_success():
         assert data["id"] == "IND-AUS-101"
         assert data["location_ref"] == "Block B, Row 12"
 
-@pytest.mark.asyncio
-async def test_duplicate_scan_rejected():
+def test_duplicate_scan_rejected():
     mock_ticket = {
         "event_id": "event_001",
         "event_name": "India vs Australia",
@@ -40,8 +37,7 @@ async def test_duplicate_scan_rejected():
         assert response.status_code == 403
         assert "already been scanned" in response.json()["detail"]
 
-@pytest.mark.asyncio
-async def test_event_mismatch_rejected():
+def test_event_mismatch_rejected():
     mock_ticket = {
         "event_id": "WRONG_EVENT",
         "event_name": "India vs Australia",

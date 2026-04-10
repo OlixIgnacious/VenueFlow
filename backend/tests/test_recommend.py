@@ -39,8 +39,7 @@ def test_prompt_builder_no_hardcoding(sample_data):
     assert "Gate A" in user
     assert "B12" in user
 
-@pytest.mark.asyncio
-async def test_recommendation_high_density():
+def test_recommendation_high_density():
     # Setup venue and high density entry points
     venue = VenueConfig(
         id="venue_001",

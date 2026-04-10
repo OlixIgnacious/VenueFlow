@@ -2,8 +2,7 @@ import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import Recommendation from '../Recommendation';
-import { BrowserRouter } from 'react-router-dom';
-import { VenueProvider } from '../../context/VenueContext';
+import { MemoryRouter } from 'react-router-dom';
 import axios from 'axios';
 
 vi.mock('axios');
@@ -32,7 +31,7 @@ const mockRecommendation = {
 // Define a mutable object to control mock values
 const venueContextMock = {
   venue: mockVenue,
-  activeEvent: mockEvent,
+  event: mockEvent,
   loading: false
 };
 
@@ -41,13 +40,22 @@ vi.mock('../../context/VenueContext', () => ({
   VenueProvider: ({ children }) => <div>{children}</div>
 }));
 
+vi.mock('../../hooks/useEntryPoints', () => ({
+  useEntryPoints: () => ({
+    entryPoints: {
+      'entry_A': { label: 'Gate A', wait_minutes: 10, status: 'busy' },
+      'entry_B': { label: 'Gate B', wait_minutes: 2, status: 'open' }
+    }
+  })
+}));
+
 describe('Recommendation Page', () => {
   it('renders loading state when loading is true', () => {
     venueContextMock.loading = true;
     render(
-      <BrowserRouter>
+      <MemoryRouter initialEntries={['/recommend?ref=Seat-101']}>
         <Recommendation />
-      </BrowserRouter>
+      </MemoryRouter>
     );
     expect(screen.getByText(/AI is calculating/i)).toBeDefined();
     venueContextMock.loading = false; // Reset for next tests
@@ -57,13 +65,13 @@ describe('Recommendation Page', () => {
     axios.get.mockResolvedValue({ data: mockRecommendation });
 
     render(
-      <BrowserRouter>
+      <MemoryRouter initialEntries={['/recommend?ref=Seat-101']}>
         <Recommendation />
-      </BrowserRouter>
+      </MemoryRouter>
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/entry_B/i)).toBeDefined();
+      // Component renders the entry label ("Gate B"), not the key ("entry_B")
       expect(screen.getByText(/Gate B is much faster/i)).toBeDefined();
     });
   });

@@ -1,12 +1,10 @@
-import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 from fastapi.testclient import TestClient
 from backend.main import app
 
 client = TestClient(app)
 
-@pytest.mark.asyncio
-async def test_list_events_success():
+def test_list_events_success():
     mock_events = {
         "event_001": {
             "name": "India vs Australia — T20",
@@ -32,8 +30,7 @@ async def test_list_events_success():
         assert data["event_001"]["name"] == "India vs Australia — T20"
         assert data["event_002"]["id"] == "event_002"
 
-@pytest.mark.asyncio
-async def test_list_events_empty():
+def test_list_events_empty():
     with patch("backend.services.firebase_client.firebase_client.get_active_events", return_value=None):
         response = client.get("/api/events/list")
         assert response.status_code == 200

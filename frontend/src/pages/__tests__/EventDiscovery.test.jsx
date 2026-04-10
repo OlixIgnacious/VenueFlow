@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
+import { axe } from 'vitest-axe';
 import { BrowserRouter } from 'react-router-dom';
 import EventDiscovery from '../EventDiscovery';
 import axios from 'axios';
@@ -66,10 +67,6 @@ describe('EventDiscovery', () => {
   });
 
   it('has no accessibility violations', async () => {
-    // Note: requires vitest-axe and axe-core
-    const { axe, toHaveNoViolations } = await import('vitest-axe');
-    expect.extend({ toHaveNoViolations });
-    
     axios.get.mockResolvedValue({ data: mockEvents });
     const { container } = render(
       <BrowserRouter>
@@ -83,6 +80,6 @@ describe('EventDiscovery', () => {
     });
     
     const results = await axe(container);
-    expect(results).toHaveNoViolations();
+    expect(results.violations).toHaveLength(0);
   });
 });
