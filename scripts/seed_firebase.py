@@ -59,7 +59,7 @@ def seed():
             "venue_id": "venue_001",
             "venue_name": "M. Chinnaswamy Stadium",
             "start_time": (datetime.now(timezone.utc) + timedelta(hours=2)).isoformat(),
-            "status": "upcoming"
+            "status": "active"
         },
         "event_002": {
             "name": "Bengaluru Tech Summit 2026",
@@ -67,7 +67,7 @@ def seed():
             "venue_id": "venue_002",
             "venue_name": "Bangalore International Exhibition Centre",
             "start_time": (datetime.now(timezone.utc) + timedelta(days=5)).isoformat(),
-            "status": "upcoming"
+            "status": "active"
         }
     }
     db.reference('/events').set(events)

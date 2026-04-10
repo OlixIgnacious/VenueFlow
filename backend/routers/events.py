@@ -29,6 +29,10 @@ async def list_events() -> Dict[str, EventConfig]:
 
     result = {}
     for eid, data in events_data.items():
+        # Only include active events in the general listing
+        if data.get('status') != 'active':
+            continue
+            
         data['id'] = eid
         
         # Populate venue_name for display in list views

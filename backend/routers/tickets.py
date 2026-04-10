@@ -44,16 +44,18 @@ async def get_ticket(request: Request, ticket_id: str) -> Ticket:
 
     logger.info(f"[TICKET] Found ticket — event_id='{ticket_data.get('event_id')}' status='{ticket_data.get('status', 'valid')}'")
 
-    # Security check: Does this ticket belong to the active event?
-    active_event_id = firebase_client.get_active_event_id()
-    if ticket_data.get('event_id') != active_event_id:
+    # ── 2. Security check: Is this ticket for an active event? ───────────────
+    event_id = ticket_data.get('event_id')
+    event_data = firebase_client.get_event(event_id)
+    
+    if not event_data or event_data.get('status') != 'active':
         logger.warning(
-            f"[TICKET] Event mismatch — ticket.event_id='{ticket_data.get('event_id')}' "
-            f"active_event_id='{active_event_id}'"
+            f"[TICKET] Event context invalid — ticket.event_id='{event_id}' "
+            f"status='{event_data.get('status') if event_data else 'NOT_FOUND'}'"
         )
         raise HTTPException(
             status_code=403,
-            detail=f"Ticket {ticket_id} is not for the currently active event."
+            detail=f"Ticket {ticket_id} belongs to an event that is not currently active."
         )
 
     # Prevent reuse of tickets

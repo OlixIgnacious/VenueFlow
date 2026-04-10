@@ -49,16 +49,7 @@ async def get_recommendation(
     """
     logger.info(f"[RECOMMEND] Request for ref='{ref}' event_id='{event_id}'")
 
-    # ── 1. Resolve active event ───────────────────────────────────────────────
-    if not event_id:
-        event_id = firebase_client.get_active_event_id()
-        logger.info(f"[RECOMMEND] Resolved active event_id='{event_id}' from Firebase")
-
-    if not event_id:
-        logger.error("[RECOMMEND] No active event found in Firebase — returning 404")
-        raise HTTPException(status_code=404, detail="No active event found")
-
-    # ── 1b. Validate Ticket ID (ref) ──────────────────────────────────────────
+    # ── 1. Resolve active event context ──────────────────────────────────────
     ticket_data = firebase_client.get_ticket(ref)
     if not ticket_data:
         logger.warning(f"[RECOMMEND] Invalid ticket ID ref='{ref}'")
@@ -66,8 +57,22 @@ async def get_recommendation(
             status_code=403, 
             detail="Invalid ticket ID: The provided reference does not match any known ticket."
         )
+
+    # Automatically switch context if event_id is unspecified but ticket is valid
+    if not event_id:
+        event_id = ticket_data.get('event_id')
+        logger.info(f"[RECOMMEND] Derived event_id='{event_id}' from ticket metadata")
+
+    # ── 1b. Security Check: Is the event active? ─────────────────────────────
+    event_data = firebase_client.get_event(event_id)
+    if not event_data or event_data.get('status') != 'active':
+        logger.warning(f"[RECOMMEND] Attempted access to non-active event='{event_id}'")
+        raise HTTPException(
+            status_code=403,
+            detail="This event is not currently active for entry routing."
+        )
     
-    # Cross-check event_id
+    # Ensure ticket matches the event (even if we just derived it)
     if ticket_data.get('event_id') != event_id:
         logger.warning(f"[RECOMMEND] Ticket {ref} belongs to {ticket_data.get('event_id')}, not {event_id}")
         raise HTTPException(
