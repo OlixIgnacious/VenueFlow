@@ -154,4 +154,4 @@ jobs:
             FIREBASE_DATABASE_URL=${{ steps.secrets.outputs.FIREBASE_DATABASE_URL }}
             ADMIN_API_KEY=${{ steps.secrets.outputs.ADMIN_API_KEY }}
           secrets: |-
-            FIREBASE_CREDENTIALS=FIREBASE_CREDENTIALS:latest
+            FIREBASE_SERVICE_CREDENTIALS=FIREBASE_CREDENTIALS:latest

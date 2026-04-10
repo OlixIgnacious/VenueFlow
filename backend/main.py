@@ -35,7 +35,7 @@ async def lifespan(app: FastAPI):
     import firebase_admin
     if not firebase_admin._apps:
         logger.error("[CRITICAL] Firebase was not initialized. Startup aborted.")
-        raise RuntimeError("Firebase initialization failed. Check FIREBASE_CREDENTIALS.")
+        raise RuntimeError("Firebase initialization failed. Check FIREBASE_SERVICE_CREDENTIALS.")
         
     simulator.start()
     yield

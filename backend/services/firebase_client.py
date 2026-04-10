@@ -17,9 +17,9 @@ class FirebaseClient:
     def _initialize(self):
         try:
             if not firebase_admin._apps:
-                creds_json = settings.FIREBASE_CREDENTIALS
+                creds_json = settings.FIREBASE_SERVICE_CREDENTIALS
                 if not creds_json:
-                    logger.warning("FIREBASE_CREDENTIALS environment variable is empty. Firebase will not be initialized.")
+                    logger.warning("FIREBASE_SERVICE_CREDENTIALS environment variable is empty. Firebase will not be initialized.")
                     return
 
                 try:
