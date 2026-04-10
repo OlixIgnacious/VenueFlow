@@ -1,3 +1,8 @@
+"""
+Unit tests for the Crowd Simulator mathematical curves.
+Verifies the stochastic movement logic and specific arrival/departure 
+profiles for different event archetypes.
+"""
 import pytest
 from backend.services.simulator import CrowdSimulator
 

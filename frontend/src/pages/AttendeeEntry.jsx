@@ -7,6 +7,20 @@ import TicketScanner from '../components/TicketScanner';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
+/**
+ * Attendee Entry Page.
+ * 
+ * The primary interface for attendees reaching the venue. 
+ * Allows users to either scan their digital ticket for automatic seat 
+ * detection or manually enter their seat/section reference.
+ * 
+ * Features:
+ * - Ticket validation via the backend API.
+ * - Integration with the TicketScanner component.
+ * - Redirection to the Recommendation page with extracted seating metadata.
+ * 
+ * @returns {JSX.Element} The Attendee Entry page.
+ */
 const AttendeeEntry = () => {
   const { venue, event, loading, error } = useVenue();
   const [searchParams] = useSearchParams();
@@ -15,12 +29,24 @@ const AttendeeEntry = () => {
   const [ticket, setTicket] = useState(null);
   const navigate = useNavigate();
 
+  /**
+   * Navigates to the recommendation page using the provided location reference.
+   * 
+   * @param {string|null} customRef - Optional reference override (e.g., from a ticket).
+   */
   const handleFindEntry = (customRef = null) => {
     const finalRef = customRef || refValue;
     if (!finalRef) return;
     navigate(`/recommendation?ref=${finalRef}`);
   };
 
+  /**
+   * Processes a successful ticket scan.
+   * Fetches ticket validity from the backend and extracts the seating reference.
+   * 
+   * @param {string} ticketId - The scanned ticket identifier.
+   * @throws {Error} If the ticket is invalid or belongs to another event.
+   */
   const handleTicketScan = async (ticketId) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/api/tickets/${ticketId}`);
@@ -30,7 +56,7 @@ const AttendeeEntry = () => {
       setRefValue(ticketData.location_ref);
       setShowScanner(false);
       
-      // Auto-navigate after a short delay to show the ticket details
+      // Auto-navigate after a short delay to show the "Success" state to the user
       setTimeout(() => {
         handleFindEntry(ticketData.location_ref);
       }, 1500);

@@ -1,3 +1,9 @@
+"""
+Gemini AI Service Client.
+
+Integrates with Google's Generative AI API (REST) to provide personalized 
+venue entry recommendations using structured JSON outputs.
+"""
 import httpx
 import json
 import asyncio
@@ -7,6 +13,7 @@ from backend.config import settings
 
 logger = logging.getLogger(__name__)
 
+# Constants for retry logic
 RETRY_STATUSES = {429, 500, 502, 503, 504}
 MAX_RETRIES = 3
 # Back-off: 2s, 4s, 8s  (with up to 1s jitter each)
@@ -14,7 +21,14 @@ BASE_BACKOFF = 2.0
 
 
 class GeminiClient:
+    """
+    Client for interacting with the Gemini 2.0 Flash API.
+    
+    Handles authentication, structured content generation with native 
+    JSON schemas, and robust error handling with retries.
+    """
     def __init__(self):
+        """Initializes the client with the API key and model configuration."""
         self.api_key = settings.GEMINI_API_KEY
         self.model = "gemini-2.0-flash"
         self.base_url = "https://generativelanguage.googleapis.com/v1beta/models"
@@ -25,17 +39,19 @@ class GeminiClient:
         user_message: str
     ) -> Optional[dict[str, Any]]:
         """
-        Sends a request to the Gemini 2.0 Flash model to generate a structured entry recommendation.
+        Sends a request to the Gemini model to generate a structured entry recommendation.
         
-        Retry Mechanism: 
-            Automated retries (max 3) with exponential back-off (2s, 4s, 8s) on 429/5xx errors.
+        Args:
+            system_prompt (str): The context and rules for the AI persona.
+            user_message (str): Real-time venue and attendee data to process.
+            
+        Returns:
+            Optional[dict[str, Any]]: Parsed JSON recommendation or None if generation fails.
         
-        Failure Policy:
-            Returns None if all retries fail, a timeout occurs, or the API key is missing. 
-            The router should handle this by falling back to rule-based pathfinding.
-        
-        Schema Enforcement:
-            Uses a native JSON schema to force the model to return a structured Recommendation object.
+        Notes: 
+            - Retries up to 3 times on transient network/API errors (429/5xx).
+            - Uses an explicit JSON schema to enforce structured output.
+            - Router should handle None returns by falling back to rule-based routing.
         """
         if not self.api_key:
             logger.warning("[GEMINI] No GEMINI_API_KEY set — skipping AI call")
@@ -132,5 +148,5 @@ class GeminiClient:
 
         return None
 
-
+# Global singleton instance
 gemini_client = GeminiClient()

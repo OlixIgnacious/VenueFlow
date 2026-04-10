@@ -7,6 +7,20 @@ import AttendeeEntry from './pages/AttendeeEntry';
 import Recommendation from './pages/Recommendation';
 import StaffDashboard from './pages/StaffDashboard';
 
+/**
+ * Main application component for VenueFlow.
+ * 
+ * Orchestrates the global providers (Error Boundaries, Venue Context) 
+ * and defines the primary client-side routing routes for attendees and staff.
+ * 
+ * Routes:
+ * - / : Event Discovery (Landing)
+ * - /entry : Ticket Validation & Entry
+ * - /recommendation : AI Entry Recommendations
+ * - /staff : Live Crowd Monitoring Dashboard
+ * 
+ * @returns {JSX.Element} The root application component.
+ */
 function App() {
   return (
     <ErrorBoundary>

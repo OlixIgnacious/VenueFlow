@@ -1,3 +1,6 @@
+"""
+Shared test fixtures and global mocks for the VenueFlow backend test suite.
+"""
 import pytest
 from unittest.mock import patch, MagicMock
 

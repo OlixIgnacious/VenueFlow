@@ -1,3 +1,8 @@
+"""
+End-to-end smoke tests for the VenueFlow backend.
+Covers the full attendee flow from event discovery to ticket scanning 
+and AI-powered entry recommendations.
+"""
 import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import patch, MagicMock

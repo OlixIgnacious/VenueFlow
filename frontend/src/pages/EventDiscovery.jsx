@@ -5,12 +5,29 @@ import { Search, Calendar, MapPin, ArrowRight, Loader2, IndianRupee } from 'luci
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
+/**
+ * Event Discovery Page.
+ * 
+ * Provides a landing interface for attendees to search for and select 
+ * their specific event. This selection sets the context for the 
+ * rest of the entry experience.
+ * 
+ * Functions:
+ * - Fetches all active events from the backend.
+ * - Provides real-time filtering by name and type.
+ * - Navigates to the Attendee Entry page with the selected event context.
+ * 
+ * @returns {JSX.Element} The Event Discovery page.
+ */
 const EventDiscovery = () => {
   const [events, setEvents] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  /**
+   * Fetches the complete list of available events on mount.
+   */
   useEffect(() => {
     const fetchEvents = async () => {
       try {
@@ -25,6 +42,9 @@ const EventDiscovery = () => {
     fetchEvents();
   }, []);
 
+  /**
+   * Filters the master event list based on the user's search input.
+   */
   const filteredEvents = Object.entries(events).filter(([id, event]) => 
     event.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     event.type.toLowerCase().includes(searchTerm.toLowerCase())

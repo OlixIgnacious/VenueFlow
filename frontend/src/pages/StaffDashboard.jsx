@@ -11,6 +11,21 @@ import { Activity, AlertTriangle, LayoutDashboard, Map as MapIcon, RefreshCw, Ch
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
+/**
+ * Staff Intelligence Dashboard.
+ * 
+ * Provides venue operators with a real-time overview of crowd density 
+ * across all entry points. Includes high-congestion alerting and 
+ * geographic heatmapping.
+ * 
+ * Features:
+ * - Real-time synchronization with Firebase Realtime Database.
+ * - Event switcher to monitor different scheduled events.
+ * - Toggleable views: List (tabular data) and Heatmap (geographic distribution).
+ * - Automatic congestion alerts based on thresholds.
+ * 
+ * @returns {JSX.Element} The Staff Dashboard.
+ */
 const StaffDashboard = () => {
   const { venue, event, loading: venueLoading, refreshConfig } = useVenue();
   const { entryPoints, loading: entriesLoading } = useEntryPoints(event?.id);
@@ -20,7 +35,9 @@ const StaffDashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  // Fetch all events for the switcher
+  /**
+   * Fetches all registered events to populate the dashboard's event switcher.
+   */
   useEffect(() => {
     const fetchAllEvents = async () => {
       try {
@@ -33,7 +50,10 @@ const StaffDashboard = () => {
     fetchAllEvents();
   }, []);
 
-  // Monitor Firebase Connection Status
+  /**
+   * Monitors the Firebase connection status to provide visual feedback 
+   * to operators regarding data freshness.
+   */
   useEffect(() => {
     const connectedRef = dbRef(rtdb, '.info/connected');
     return onValue(connectedRef, (snap) => {
@@ -41,7 +61,9 @@ const StaffDashboard = () => {
     });
   }, []);
 
-  // Sync context if URL event_id changes
+  /**
+   * Syncs the dashboard context if the event_id in the URL is modified.
+   */
   useEffect(() => {
     const urlEventId = searchParams.get('event_id');
     if (urlEventId && urlEventId !== event?.id) {
@@ -49,12 +71,21 @@ const StaffDashboard = () => {
     }
   }, [searchParams, event?.id, refreshConfig]);
 
+  /**
+   * Handles switching the monitored event.
+   * Updates the URL search parameters which triggers a context refresh.
+   * 
+   * @param {React.ChangeEvent<HTMLSelectElement>} e - Change event.
+   */
   const handleEventChange = (e) => {
     const newEventId = e.target.value;
     setSearchParams({ event_id: newEventId });
     refreshConfig(newEventId);
   };
 
+  /**
+   * Logic to determine if a critical congestion alert should be displayed.
+   */
   const hasHighCongestion = Object.values(entryPoints).some(ep => ep.status === 'high');
 
   if (venueLoading) {
@@ -70,14 +101,14 @@ const StaffDashboard = () => {
 
   return (
     <div className="flex bg-slate-50 dark:bg-slate-950 min-h-screen text-slate-900 dark:text-slate-100">
-      {/* Sidebar */}
+      {/* Sidebar navigation and control panel */}
       <div className="w-64 border-r border-slate-200 dark:border-slate-800 p-6 space-y-8 flex flex-col bg-white dark:bg-slate-950 transition-colors">
         <div className="flex items-center space-x-3 px-2">
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-white shadow-md">V</div>
           <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">VenueFlow</h1>
         </div>
         
-        {/* Event Switcher */}
+        {/* Event Switcher UI */}
         <div className="px-2 space-y-2">
           <label className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1">Active Event</label>
           <div className="relative group">
@@ -101,7 +132,9 @@ const StaffDashboard = () => {
               activeTab === 'list' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900'
             }`}
           >
-            <LayoutDashboard size={20} />
+            <div className="w-5 h-5 flex items-center justify-center pt-0.5">
+              <LayoutDashboard size={20} />
+            </div>
             <span className="font-semibold">Dashboard</span>
           </button>
           <button 
@@ -110,7 +143,9 @@ const StaffDashboard = () => {
               activeTab === 'map' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900'
             }`}
           >
-            <MapIcon size={20} />
+            <div className="w-5 h-5 flex items-center justify-center pt-0.5">
+              <MapIcon size={20} />
+            </div>
             <span className="font-semibold">Heatmap</span>
           </button>
         </nav>
@@ -118,11 +153,11 @@ const StaffDashboard = () => {
         <div className="mt-auto px-4 py-6 bg-slate-100 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner">
           <p className="text-xs text-slate-500 uppercase tracking-widest font-bold mb-1">Venue Context</p>
           <h3 className="font-bold text-slate-800 dark:text-slate-200 line-clamp-1">{venue?.name}</h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 italic line-clamp-2">{venue?.type.replace('_', ' ')}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 italic line-clamp-2">{venue?.type?.replace('_', ' ')}</p>
         </div>
       </div>
 
-      {/* Main Content */}
+      {/* Main viewport */}
       <div className="flex-1 p-8 overflow-y-auto">
         <header className="flex justify-between items-center mb-8">
           <div>

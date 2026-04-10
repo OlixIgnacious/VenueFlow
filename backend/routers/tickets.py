@@ -1,3 +1,7 @@
+"""
+Ticket Validation API Router.
+Handles scanning, verifying, and updating the entry status of attendee tickets.
+"""
 import logging
 from fastapi import APIRouter, HTTPException, Request
 from slowapi import Limiter
@@ -16,8 +20,23 @@ limiter = Limiter(key_func=get_remote_address)
     description="Validates a ticket ID against the active event. If valid and not already used, marks the ticket as 'inside'. Returns 403 for event mismatch or duplicate scans.")
 @limiter.limit("10/minute")
 async def get_ticket(request: Request, ticket_id: str) -> Ticket:
+    """
+    Validates a ticket ID and marks it as used for the active event.
+
+    Args:
+        request (Request): The incoming FastAPI request.
+        ticket_id (str): The unique identifier for the ticket.
+
+    Returns:
+        Ticket: The validated ticket data with updated status.
+
+    Raises:
+        HTTPException: 404 if ticket not found.
+        HTTPException: 403 if ticket is for a different event or already scanned.
+    """
     logger.info(f"[TICKET] Scan request for ticket_id='{ticket_id}'")
 
+    # Fetch ticket data from Firebase
     ticket_data = firebase_client.get_ticket(ticket_id)
     if not ticket_data:
         logger.warning(f"[TICKET] ticket_id='{ticket_id}' NOT FOUND in Firebase")
@@ -37,7 +56,7 @@ async def get_ticket(request: Request, ticket_id: str) -> Ticket:
             detail=f"Ticket {ticket_id} is not for the currently active event."
         )
 
-    # Check if already used
+    # Prevent reuse of tickets
     if ticket_data.get('status') == 'inside':
         logger.warning(f"[TICKET] Duplicate scan attempt — ticket_id='{ticket_id}' is already 'inside'")
         raise HTTPException(
@@ -45,10 +64,11 @@ async def get_ticket(request: Request, ticket_id: str) -> Ticket:
             detail=f"Ticket {ticket_id} has already been scanned. Duplicate entry is not permitted."
         )
 
-    # Mark as used
+    # Atomically mark as used in Firebase
     firebase_client.update_ticket_status(ticket_id, 'inside')
     logger.info(f"[TICKET] ✓ ticket_id='{ticket_id}' marked as 'inside'")
 
+    # Return enriched ticket data
     ticket_data['id'] = ticket_id
     ticket_data['status'] = 'inside'
     return Ticket(**ticket_data)

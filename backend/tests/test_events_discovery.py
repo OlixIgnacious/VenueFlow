@@ -1,3 +1,7 @@
+"""
+Unit tests for the Events Discovery router.
+Verifies the identification and listing of available events with venue metadata.
+"""
 from unittest.mock import patch
 from fastapi.testclient import TestClient
 from backend.main import app

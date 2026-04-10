@@ -1,3 +1,7 @@
+"""
+Unit tests for the Entry Points and Venue routers.
+Verifies the retrieval of gate density data and venue/event metadata.
+"""
 import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import MagicMock, patch

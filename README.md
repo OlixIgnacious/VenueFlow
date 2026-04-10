@@ -1,70 +1,91 @@
 # VenueFlow 🏟️ — Smart Entry & Crowd Intelligence
 
-VenueFlow is a venue-agnostic, event-type-aware crowd routing platform. It solves entry-point congestion at large-scale events by providing attendees with personalized AI-powered recommendations and staff with real-time crowd intelligence dashboards.
+[![CI/CD Pipeline](https://github.com/OlixIgnacious/VenueFlow/actions/workflows/deploy.yml/badge.svg)](https://github.com/OlixIgnacious/VenueFlow/actions)
+[![FastAPI](https://img.shields.io/badge/FastAPI-005863?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)](https://reactjs.org/)
+[![Gemini 2.0](https://img.shields.io/badge/Gemini_2.0_Flash-4285F4?style=flat&logo=google&logoColor=white)](https://deepmind.google/technologies/gemini/)
 
-## 🚀 The Core Problem
-At any major event, people naturally cluster at familiar or visible entrances, creating long wait times while other gates remain underused. VenueFlow distributes the crowd intelligently using real-time density sensors (simulated) and Gemini AI.
+VenueFlow is a **venue-agnostic, event-type-aware** crowd routing platform. It solves entry-point congestion at large-scale events by providing attendees with personalized AI-powered recommendations and staff with real-time crowd intelligence dashboards.
 
-## 🌟 Key Features
-- **Dynamic Vocabulary**: Labels like "Gate", "Door", or "Pavilion" are injected via config — zero hardcoding.
-- **Event-Aware Simulation**: Crowd curves match real behavior (Sports vs. Concerts vs. Conferences).
-- **Gemini Recommendations**: Intelligent routing logic that understands venue context.
-- **Real-time Heatmap**: Visual dashboard for venue staff to spot bottlenecks before they form.
-- **Walking Directions**: Integrated Google Maps directions to the recommended entrance.
+---
 
-## 🛠️ Tech Stack
-- **Backend**: FastAPI (Python 3.11)
-- **Frontend**: React 18 (Vite, Tailwind CSS)
-- **AI**: Gemini 2.0 Flash (via Google AI Studio)
-- **Database**: Firebase Realtime Database
-- **Hosting**: Google Cloud Run
-- **Secrets**: Google Cloud Secret Manager
-- **Maps**: Google Maps JavaScript API (Heatmap + Directions)
+## 🏗️ System Architecture
 
-## 📁 Project Structure
-```text
-venueflow/
-├── backend/            # FastAPI source code
-├── frontend/           # React + Vite source code
-├── scripts/            # Database seeding scripts
-├── docs/               # Setup & Deployment guides
-├── Dockerfile          # Multi-stage production build
-└── thingstodo.md      # Development checklist
+```mermaid
+graph TD
+    subgraph Frontend
+        A[Attendee UI] --> B[VenueContext]
+        C[Staff UI] --> B
+        B --> D[useEntryPoints Hook]
+    end
+
+    subgraph Backend
+        E[FastAPI Routers] --> F[Gemini Service]
+        E --> G[Simulator Service]
+        E --> H[Firebase Client]
+    end
+
+    subgraph Data Layer
+        D <--> I[(Firebase RTDB)]
+        H <--> I
+    end
+
+    F --> J[Vertex AI / Gemini 2.0]
 ```
 
-## ⚙️ Setup & Deployment
-Detailed guides are available in the `docs/` folder:
-- [Firebase Setup](docs/firebase_setup_guide.md)
-- [GCP Setup](docs/gcp_setup_guide.md)
-- [Google Maps Setup](docs/google_maps_setup_guide.md)
+---
 
-### Local Development
-1. **Backend**:
-   ```bash
-   pip install -r backend/requirements.txt
-   uvicorn backend.main:app --reload
-   ```
-2. **Frontend**:
-   ```bash
-   cd frontend
-   npm install
-   npm run dev
-   ```
+## 🌟 Key Features
 
-## 🧪 Demo Scenario
-The system is seeded with two distinct contexts:
-1. **Stadium**: "India vs Australia T20" at M. Chinnaswamy Stadium. Uses "Gate" and "Seat Section".
-2. **Exhibition Hall**: "Bengaluru Tech Summit" at BIEC. Uses "Pavilion Entry" and "Zone".
+### 🧠 Gemini-Powered Recommendations
+Intelligent routing logic that understands venue context, event type, and current gate density.
+> [!TIP]
+> The system reconciles denormalized venue config with real-time sensor data to provide "human" tips like *"Gate B is your best bet; it's right by the food court and currently has zero wait."*
 
-Switching between these via the Admin API instantly updates all UI labels, the Gemini prompt context, and the simulator's crowd behavior curve.
+### 🗺️ Live Crowd Heatmap
+Visual dashboard for venue staff to spot bottlenecks before they form, using Google Maps JS API.
 
-## 📝 Assumptions
-- **Crowd density is simulated.** Real deployments would use IoT sensors (infrared counters, camera CV models) at each entry point in place of `simulator.py`.
-- **Ticket scanner is a simulation.** The QR UI does not use the device camera. Production would use `html5-qrcode` or ruggedised handheld scanners over venue Wi-Fi/LTE.
-- **No attendee authentication.** The flow requires only a ticket ID. Production would add identity verification to prevent ticket sharing.
-- **Entry point coordinates are approximate.** Lat/lng are computed as stadium centre ± offset. Real deployments would GPS-survey each gate precisely.
-- **Single active event at a time.** Multi-venue concurrent support would require per-venue Firebase namespacing and horizontal API scaling.
-- **Wait time is capacity-relative.** `wait = int(current_count / 15) + 1` assumes a throughput of ~15 people/minute per gate. A real system would calibrate throughput from historical scan-rate data.
+### 🎭 Total Vocabulary Versatility
+Labels like "Gate", "Door", or "Pavilion" are injected via configuration — zero hardcoding. Switching from a Football Stadium to a Tech Conference takes one API call.
+
+---
+
+## 📸 Visual Showcase
+
+````carousel
+![Staff Dashboard View](file:///Users/olixstudios/.gemini/antigravity/brain/64131bd9-e40c-44c1-8006-cb99c004bd74/staff_dashboard_final_1775770142198.png)
+<!-- slide -->
+![AI Recommendation Flow](file:///Users/olixstudios/.gemini/antigravity/brain/64131bd9-e40c-44c1-8006-cb99c004bd74/recommendation_page_1775770142198.png)
+<!-- slide -->
+![Real-time Heatmap](file:///Users/olixstudios/.gemini/antigravity/brain/64131bd9-e40c-44c1-8006-cb99c004bd74/staff_dashboard_initial_1775764748325.png)
+````
+
+---
+
+## 🛠️ Tech Stack & Security
+
+- **Backend**: FastAPI (Python 3.11) with Google-style Docstrings.
+- **Frontend**: React 18 (Vite, Tailwind CSS) with JSDoc standards.
+- **AI**: Gemini 2.0 Flash via Vertex AI.
+- **Cloud**: Automated keyless deployment to **Google Cloud Run** using GitHub OIDC / Workload Identity Federation.
+- **Real-time**: Firebase Realtime Database for sub-second gate density updates.
+
+---
+
+## 📁 Sub-System Documentation
+
+| Component | Description | README |
+| :--- | :--- | :--- |
+| **Backend** | Python API, Simulator, AI Orchestration | [Explore Backend](backend/README.md) |
+| **Frontend** | React SPA, Google Maps Integration | [Explore Frontend](frontend/README.md) |
+| **Infrastructure** | Docker & Deployment Guides | [Explore Docs](docs/README.md) |
+
+---
+
+## 📝 Project Assumptions & Design Decisions
+- **Crowd density is simulated.** Real deployments would use IoT sensors (infrared counters, camera CV models) at each entry point.
+- **Secure by Default.** No long-lived service account keys; the entire CI/CD pipeline uses short-lived tokens via Workload Identity.
+- **Dynamic Context.** The Gemini prompt builder uses a pure functional approach to scale venue-specific labels without hardcoding.
 
 ---
 **Hackathon Submission** — *Built for Google Antigravity Challenge*

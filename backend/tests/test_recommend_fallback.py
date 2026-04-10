@@ -1,3 +1,8 @@
+"""
+Unit tests for the Recommendation Fallback mechanism.
+Ensures that the system correctly falls back to a rule-based pathfinding 
+algorithm if the AI service (Gemini) is unavailable.
+"""
 import pytest
 from unittest.mock import MagicMock, patch
 from fastapi.testclient import TestClient

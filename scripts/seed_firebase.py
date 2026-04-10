@@ -1,21 +1,36 @@
+"""
+Firebase Seeding Script.
+Initializes the Firebase Realtime Database with sample venues, events, 
+entry points, and tickets for development and testing.
+"""
 import sys
 import os
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 
-# Load environment variables before any backend imports
+# Pre-computation: Load environment variables before any backend imports 
+# to ensure the singleton firebase_client uses the correct config.
 load_dotenv()
 
-# Add parent directory to sys.path to import backend modules
+# Add parent directory to sys.path to enable absolute imports of the backend package
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from backend.services.firebase_client import firebase_client
 from firebase_admin import db
 
 def seed():
+    """
+    Populates the Firebase Realtime Database with a standard set of test data.
+    
+    This includes:
+    1. Multiple venue configurations.
+    2. Scheduled events linked to those venues.
+    3. Real-time entry point states (gates).
+    4. Valid attendee tickets for testing flows.
+    """
     print("Seeding Firebase...")
 
-    # 1. Venues
+    # 1. Venues: Physical locations with geographic metadata
     venues = {
         "venue_001": {
             "name": "M. Chinnaswamy Stadium",
@@ -36,7 +51,7 @@ def seed():
     }
     db.reference('/venues').set(venues)
 
-    # 2. Events
+    # 2. Events: Scheduled occurrences at specific venues
     events = {
         "event_001": {
             "name": "India vs Australia — T20",
@@ -57,10 +72,10 @@ def seed():
     }
     db.reference('/events').set(events)
 
-    # 3. Active Event
+    # 3. Active Event Pointer: Dictates the context for the attendee dashboard
     db.reference('/active_event').set({"event_id": "event_001"})
 
-    # 4. Entry Points for Venue 001
+    # 4. Entry Points for Venue 001 (Stadium)
     entry_points_001 = {}
     gate_labels = ["A", "B", "C", "D", "E", "F"]
     for i, label in enumerate(gate_labels):
@@ -78,7 +93,7 @@ def seed():
         }
     db.reference('/entry_points/event_001').set(entry_points_001)
 
-    # 5. Entry Points for Venue 002
+    # 5. Entry Points for Venue 002 (Convention Center)
     entry_points_002 = {}
     for i in range(8):
         label = chr(65 + i) # A, B, C...
@@ -96,7 +111,7 @@ def seed():
         }
     db.reference('/entry_points/event_002').set(entry_points_002)
 
-    # 6. Sample Tickets
+    # 6. Sample Tickets: Used for validating the end-to-end scanner and recommendation flow
     tickets = {
         "IND-AUS-101": {
             "event_id": "event_001",
@@ -104,7 +119,8 @@ def seed():
             "date": "April 11, 2026",
             "persons": 2,
             "location_ref": "Block B, Row 12",
-            "venue_address": "Cubbon Park, Bengaluru, Karnataka 560001"
+            "venue_address": "Cubbon Park, Bengaluru, Karnataka 560001",
+            "status": "valid"
         },
         "TECH-SUMMIT-01": {
             "event_id": "event_002",
@@ -112,7 +128,8 @@ def seed():
             "date": "April 14, 2026",
             "persons": 1,
             "location_ref": "Zone C",
-            "venue_address": "10th Mile, Tumkur Main Road, Madavara, Bengaluru 560073"
+            "venue_address": "10th Mile, Tumkur Main Road, Madavara, Bengaluru 560073",
+            "status": "valid"
         }
     }
     db.reference('/tickets').set(tickets)

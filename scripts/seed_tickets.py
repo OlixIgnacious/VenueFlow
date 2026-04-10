@@ -1,18 +1,25 @@
 """
-Seed additional test tickets into Firebase for manual QA testing.
-Run from project root: python3 scripts/seed_tickets.py
+Dynamic Ticket Seeding Script.
+Generates and seeds additional test tickets with unique UUIDs into Firebase 
+to facilitate large-scale manual QA and end-to-end testing.
 """
 import sys
 import os
+import uuid
+
+# Add parent directory to sys.path to enable absolute imports of the backend package
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from backend.services.firebase_client import firebase_client
 from firebase_admin import db
 
-import uuid
+def get_cricket_tickets() -> dict:
+    """
+    Generates a batch of sample tickets for the Cricket event.
 
-# ─── Event 001 — India vs Australia T20 ───────────────────────────────────────
-def get_cricket_tickets():
+    Returns:
+        dict: A mapping of UUIDs to ticket metadata for the Cricket event.
+    """
     return {
         str(uuid.uuid4()): {
             "event_id": "event_001",
@@ -43,8 +50,13 @@ def get_cricket_tickets():
         }
     }
 
-# ─── Event 002 — Bengaluru Tech Summit 2026 ───────────────────────────────────
-def get_tech_tickets():
+def get_tech_tickets() -> dict:
+    """
+    Generates a batch of sample tickets for the Tech Summit event.
+
+    Returns:
+        dict: A mapping of UUIDs to ticket metadata for the Tech Summit.
+    """
     return {
         str(uuid.uuid4()): {
             "event_id": "event_002",
@@ -67,6 +79,10 @@ def get_tech_tickets():
     }
 
 def seed_tickets():
+    """
+    Aggregates all ticket batches and performs a bulk update to the Firebase 
+    '/tickets' node.
+    """
     print("Seeding test tickets with UUIDs...")
     all_tickets = {**get_cricket_tickets(), **get_tech_tickets()}
     db.reference("/tickets").update(all_tickets)

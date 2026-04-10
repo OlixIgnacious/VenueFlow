@@ -10,6 +10,20 @@ import { ArrowLeft, Loader2, Sparkles, Navigation } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
+/**
+ * AI Recommendation Page.
+ * 
+ * Orchestrates the retrieval of a personalized entry recommendation 
+ * based on the user's seating location and real-time venue status.
+ * 
+ * Features:
+ * - Geolocation support for relative navigation.
+ * - Integration with the Gemini AI recommendation engine.
+ * - Detailed entry point cards for recommended and alternative gates.
+ * - Interactive venue map showing gate locations and density.
+ * 
+ * @returns {JSX.Element} The Recommendation page.
+ */
 const Recommendation = () => {
   const { venue, event, loading: venueLoading } = useVenue();
   const [searchParams] = useSearchParams();
@@ -20,6 +34,9 @@ const Recommendation = () => {
   const [userLocation, setUserLocation] = useState(null);
   const navigate = useNavigate();
 
+  /**
+   * Effect to handle user geolocation for map orientation.
+   */
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -34,8 +51,15 @@ const Recommendation = () => {
     }
   }, []);
 
+  /**
+   * Subscribes to the real-time entry point state for the current event.
+   */
   const { entryPoints } = useEntryPoints(event?.id);
 
+  /**
+   * Effect to fetch the AI recommendation based on the deep-linked 'ref' value.
+   * Redirects to the home page if no reference is present.
+   */
   useEffect(() => {
     if (!refValue) {
       navigate('/');
@@ -134,7 +158,7 @@ const Recommendation = () => {
         </div>
       )}
 
-      {/* Map Integration */}
+      {/* Map Integration component with Error Boundary to handle potential GL errors */}
       <div className="h-80 bg-white dark:bg-slate-900/60 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xl relative">
         <ErrorBoundary>
           <VenueMap 

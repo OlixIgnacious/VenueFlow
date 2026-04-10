@@ -1,3 +1,7 @@
+"""
+Unit tests for the Recommendation logic and Prompt Builder.
+Ensures that AI prompts are dynamically constructed without hardcoded values.
+"""
 import pytest
 from unittest.mock import MagicMock, patch
 from backend.prompt_builder import build_gemini_prompts

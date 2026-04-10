@@ -1,3 +1,7 @@
+"""
+Recommendation API Router.
+Handles personalized venue entry guidance using AI and real-time crowd data.
+"""
 import logging
 import time
 from fastapi import APIRouter, HTTPException, Query, Request
@@ -29,6 +33,20 @@ async def get_recommendation(
     ref: str,
     event_id: Optional[str] = Query(None)
 ) -> Recommendation:
+    """
+    Orchestrates the AI recommendation flow for an attendee.
+
+    Args:
+        request (Request): FastAPI request object for rate limiting.
+        ref (str): The seat or zone reference from the attendee's ticket.
+        event_id (Optional[str]): Explicit event ID, defaults to the active event.
+
+    Returns:
+        Recommendation: Structured guidance including entry gate, wait time, and reasoning.
+
+    Raises:
+        HTTPException: 404 if no active event/venue found, 403 if ticket is invalid.
+    """
     logger.info(f"[RECOMMEND] Request for ref='{ref}' event_id='{event_id}'")
 
     # ── 1. Resolve active event ───────────────────────────────────────────────
@@ -46,10 +64,10 @@ async def get_recommendation(
         logger.warning(f"[RECOMMEND] Invalid ticket ID ref='{ref}'")
         raise HTTPException(
             status_code=403, 
-            detail="Invalid ticket ID: The provided reference does not match any known ticket. Please recheck and try again."
+            detail="Invalid ticket ID: The provided reference does not match any known ticket."
         )
     
-    # Optional: Cross-check event_id
+    # Cross-check event_id
     if ticket_data.get('event_id') != event_id:
         logger.warning(f"[RECOMMEND] Ticket {ref} belongs to {ticket_data.get('event_id')}, not {event_id}")
         raise HTTPException(
@@ -65,27 +83,21 @@ async def get_recommendation(
         return Recommendation(**cached_data)
 
     # ── 3. Fetch context from Firebase ────────────────────────────────────────
-    logger.info(f"[RECOMMEND] Fetching event data for event_id='{event_id}'")
+    logger.info(f"[RECOMMEND] Fetching context for event_id='{event_id}'")
     event_data = firebase_client.get_event(event_id)
     if not event_data:
-        logger.error(f"[RECOMMEND] Event '{event_id}' not found in Firebase")
         raise HTTPException(status_code=404, detail=f"Event {event_id} not found")
 
     venue_id = event_data.get('venue_id')
-    logger.info(f"[RECOMMEND] Fetching venue data for venue_id='{venue_id}'")
     venue_data = firebase_client.get_venue(venue_id)
     if not venue_data:
-        logger.error(f"[RECOMMEND] Venue '{venue_id}' not found in Firebase")
         raise HTTPException(status_code=404, detail=f"Venue {venue_id} not found")
 
-    logger.info(f"[RECOMMEND] Fetching entry points for event_id='{event_id}'")
     entry_points_data = firebase_client.get_entry_points(event_id)
     if not entry_points_data:
-        logger.error(f"[RECOMMEND] No entry points found for event '{event_id}'")
         raise HTTPException(status_code=404, detail="No entry points found")
 
-    logger.info(f"[RECOMMEND] Found {len(entry_points_data)} entry point(s)")
-
+    # Prepare model instances for prompt builder
     event_data_copy = event_data.copy()
     event_data_copy.pop('id', None)
     venue_data_copy = venue_data.copy()
@@ -101,11 +113,9 @@ async def get_recommendation(
 
     # ── 5. Fallback if Gemini unavailable ─────────────────────────────────────
     if not recommendation_data:
+        # Simple distance-independent logic: pick the gate with the lowest density
         best_entry = min(entry_points, key=lambda x: x.density)
-        logger.warning(
-            f"[RECOMMEND] Gemini unavailable — rule-based fallback: best_entry='{best_entry.id}' "
-            f"(density={best_entry.density:.2f}, wait={best_entry.wait_minutes}min)"
-        )
+        logger.warning(f"[RECOMMEND] AI unavailable — rule-based fallback: {best_entry.id}")
         recommendation_data = {
             "recommended_entry": best_entry.id,
             "wait_minutes": best_entry.wait_minutes,
@@ -115,9 +125,8 @@ async def get_recommendation(
             "tip": "AI recommendation is currently unavailable, using real-time sensor data.",
         }
     else:
+        # Cache successful AI responses
         _recommendation_cache[cache_key] = recommendation_data
-        logger.info(
-            f"[RECOMMEND] AI success — recommended_entry='{recommendation_data.get('recommended_entry')}'"
-        )
+        logger.info(f"[RECOMMEND] AI success — recommended_entry='{recommendation_data.get('recommended_entry')}'")
 
     return Recommendation(**recommendation_data)

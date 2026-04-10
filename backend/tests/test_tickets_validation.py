@@ -1,3 +1,7 @@
+"""
+Unit tests for the Ticket Validation router.
+Verifies ticket scanning logic, event matching, and prevents duplicate entries.
+"""
 from unittest.mock import patch
 from fastapi.testclient import TestClient
 from backend.main import app
