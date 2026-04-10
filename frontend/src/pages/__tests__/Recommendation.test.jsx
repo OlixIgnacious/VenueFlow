@@ -32,22 +32,13 @@ const mockRecommendation = {
 // Define a mutable object to control mock values
 const venueContextMock = {
   venue: mockVenue,
-  event: mockEvent,
+  activeEvent: mockEvent,
   loading: false
 };
 
 vi.mock('../../context/VenueContext', () => ({
   useVenue: () => venueContextMock,
   VenueProvider: ({ children }) => <div>{children}</div>
-}));
-
-vi.mock('../../hooks/useEntryPoints', () => ({
-  useEntryPoints: () => ({
-    entryPoints: {
-      'entry_A': { label: 'Gate A', wait_minutes: 10, status: 'busy' },
-      'entry_B': { label: 'Gate B', wait_minutes: 2, status: 'open' }
-    }
-  })
 }));
 
 describe('Recommendation Page', () => {
@@ -64,7 +55,7 @@ describe('Recommendation Page', () => {
 
   it('renders recommendation data after fetching', async () => {
     axios.get.mockResolvedValue({ data: mockRecommendation });
-    
+
     render(
       <BrowserRouter>
         <Recommendation />

@@ -5,6 +5,12 @@ from backend.main import app
 
 client = TestClient(app)
 
+@pytest.fixture(autouse=True)
+def reset_limiter():
+    from backend.main import limiter
+    limiter.reset()
+    yield
+
 @pytest.fixture
 def mock_firebase():
     # Patch the singleton instance methods directly to be safe
