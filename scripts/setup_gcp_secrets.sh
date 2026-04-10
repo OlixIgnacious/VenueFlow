@@ -121,6 +121,12 @@ gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
     --role="roles/secretmanager.secretAccessor" \
     --quiet
 
+# Grant Cloud Run runtime SA access to secrets (needed for native --update-secrets mounting)
+gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
+    --member="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
+    --role="roles/secretmanager.secretAccessor" \
+    --quiet
+
 gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
     --member="serviceAccount:github-actions-sa@${PROJECT_ID}.iam.gserviceaccount.com" \
     --role="roles/run.admin" \
