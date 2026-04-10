@@ -50,18 +50,35 @@ async def get_recommendation(
     logger.info(f"[RECOMMEND] Request for ref='{ref}' event_id='{event_id}'")
 
     # ── 1. Resolve active event context ──────────────────────────────────────
+    # Try fetching as a Ticket ID first
     ticket_data = firebase_client.get_ticket(ref)
+    
     if not ticket_data:
-        logger.warning(f"[RECOMMEND] Invalid ticket ID ref='{ref}'")
-        raise HTTPException(
-            status_code=403, 
-            detail="Invalid ticket ID: The provided reference does not match any known ticket."
-        )
+        # Reference is not a ticket ID. Treat as raw location info (e.g. manual entry "Block B")
+        logger.info(f"[RECOMMEND] Reference '{ref}' is not a ticket ID. Treating as raw location.")
+        
+        # If no event_id provided, fallback to the system's active event
+        if not event_id:
+            event_id = firebase_client.get_active_event_id()
+            logger.info(f"[RECOMMEND] Using system-wide active event_id='{event_id}' for raw reference")
+        
+        if not event_id:
+             raise HTTPException(
+                status_code=400,
+                detail="Event context missing. Please provide an event_id for raw location routing."
+            )
 
-    # Automatically switch context if event_id is unspecified but ticket is valid
-    if not event_id:
-        event_id = ticket_data.get('event_id')
-        logger.info(f"[RECOMMEND] Derived event_id='{event_id}' from ticket metadata")
+        # Create a synthetic ticket context for the rest of the flow
+        ticket_data = {
+            'event_id': event_id,
+            'location_ref': ref,
+            'status': 'valid' # Assume valid for general routing
+        }
+    else:
+        # Automatically switch context if event_id is unspecified but ticket is valid
+        if not event_id:
+            event_id = ticket_data.get('event_id')
+            logger.info(f"[RECOMMEND] Derived event_id='{event_id}' from ticket metadata")
 
     # ── 1b. Security Check: Is the event active? ─────────────────────────────
     event_data = firebase_client.get_event(event_id)

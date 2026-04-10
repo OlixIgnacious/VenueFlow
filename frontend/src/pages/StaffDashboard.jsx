@@ -67,6 +67,7 @@ const StaffDashboard = () => {
   useEffect(() => {
     const urlEventId = searchParams.get('event_id');
     if (urlEventId && urlEventId !== event?.id) {
+      console.log(`[StaffDashboard] Context Mismatch! URL=${urlEventId}, Context=${event?.id}. Syncing...`);
       refreshConfig(urlEventId);
     }
   }, [searchParams, event?.id, refreshConfig]);

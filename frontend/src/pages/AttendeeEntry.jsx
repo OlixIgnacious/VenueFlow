@@ -28,6 +28,19 @@ const AttendeeEntry = () => {
   const [showScanner, setShowScanner] = useState(false);
   const [ticket, setTicket] = useState(null);
   const navigate = useNavigate();
+  const { refreshConfig } = useVenue();
+
+  /**
+   * Defensive Synchronization:
+   * Ensures the page context matches the URL param.
+   */
+  useEffect(() => {
+    const eventIdFromUrl = searchParams.get('event_id');
+    if (eventIdFromUrl && event && event.id !== eventIdFromUrl) {
+      console.log(`[AttendeeEntry] Context Mismatch! URL=${eventIdFromUrl}, Context=${event.id}. Syncing...`);
+      refreshConfig(eventIdFromUrl);
+    }
+  }, [searchParams, event, refreshConfig]);
 
   /**
    * Navigates to the recommendation page using the provided location reference.
@@ -37,7 +50,13 @@ const AttendeeEntry = () => {
   const handleFindEntry = (customRef = null) => {
     const finalRef = customRef || refValue;
     if (!finalRef) return;
-    navigate(`/recommendation?ref=${finalRef}`);
+    
+    // CRITICAL: Preserve the event context in the URL when navigating
+    const eventId = searchParams.get('event_id') || event?.id;
+    const url = `/recommendation?ref=${encodeURIComponent(finalRef)}${eventId ? `&event_id=${eventId}` : ''}`;
+    
+    console.log(`[AttendeeEntry] Navigating to: ${url}`);
+    navigate(url);
   };
 
   /**
@@ -58,11 +77,13 @@ const AttendeeEntry = () => {
       
       // Auto-navigate after a short delay to show the "Success" state to the user
       setTimeout(() => {
-        handleFindEntry(ticketData.location_ref);
+        handleFindEntry(ticketId); // Use the full ticket ID as the reference for better backend lookup
       }, 1500);
 
     } catch (err) {
-      throw new Error("Invalid Ticket ID for this event");
+      const errorMsg = err.response?.data?.detail || err.message;
+      console.error(`[AttendeeEntry] Ticket Scan Error: ${errorMsg}`);
+      throw new Error(errorMsg || "Invalid Ticket ID for this event");
     }
   };
 

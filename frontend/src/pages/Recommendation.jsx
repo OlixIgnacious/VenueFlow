@@ -69,8 +69,13 @@ const Recommendation = () => {
     const fetchRecommendation = async () => {
       try {
         setLoading(true);
-        console.log(`[Recommendation] Fetching from ${API_BASE_URL}/api/recommend?ref=${refValue}`);
-        const response = await axios.get(`${API_BASE_URL}/api/recommend?ref=${encodeURIComponent(refValue)}`);
+        console.log(`[Recommendation] Fetching from ${API_BASE_URL}/api/recommend?ref=${refValue}&event_id=${event?.id}`);
+        const response = await axios.get(`${API_BASE_URL}/api/recommend`, {
+          params: {
+            ref: refValue,
+            event_id: searchParams.get('event_id') || event?.id
+          }
+        });
         console.log('[Recommendation] API response:', response.data);
         setRecommendation(response.data);
       } catch (err) {

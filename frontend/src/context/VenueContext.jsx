@@ -71,17 +71,24 @@ export const VenueProvider = ({ children }) => {
    * This ensures that the context refreshes automatically when navigating 
    * between different events via the discovery page or direct links.
    */
+  // SYNC CONTEXT WITH URL: 
+  // This effect ensures that whenever the URL changes (e.g. via navigate), 
+  // the global venue context is synchronized.
   useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
     const eventIdFromUrl = searchParams.get('event_id');
     
-    // Only fetch if eventId changed or if we don't have an event yet
+    console.log(`[VenueContext] URL Change Detected. event_id (URL): ${eventIdFromUrl}, current (State): ${event?.id}`);
+
     if (eventIdFromUrl) {
+      // If we have an ID in the URL, it ALWAYS takes precedence
       fetchConfig(eventIdFromUrl);
-    } else if (!event) {
-      // Initial load without a specific ID still needs to fetch the default session
+    } else if (!event && !loading) {
+      // Only fetch default if we have nothing at all
+      console.log('[VenueContext] No event in state or URL, fetching default/cached.');
       fetchConfig(null);
     }
-  }, [searchParams]);
+  }, [location.search]); // Depend directly on location.search string
 
   return (
     <VenueContext.Provider value={{ venue, event, loading, error, refreshConfig: fetchConfig }}>
