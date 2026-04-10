@@ -8,7 +8,7 @@ import VenueMap from '../components/VenueMap';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { ArrowLeft, Loader2, Sparkles, Navigation } from 'lucide-react';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 const Recommendation = () => {
   const { venue, event, loading: venueLoading } = useVenue();

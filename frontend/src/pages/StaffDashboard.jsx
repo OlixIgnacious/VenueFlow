@@ -9,7 +9,7 @@ import { rtdb } from '../services/firebase';
 import { onValue, ref as dbRef } from 'firebase/database';
 import { Activity, AlertTriangle, LayoutDashboard, Map as MapIcon, RefreshCw, ChevronDown } from 'lucide-react';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 const StaffDashboard = () => {
   const { venue, event, loading: venueLoading, refreshConfig } = useVenue();

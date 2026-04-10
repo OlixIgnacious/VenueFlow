@@ -3,7 +3,7 @@ import axios from 'axios';
 
 const VenueContext = createContext();
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 export const VenueProvider = ({ children }) => {
   const [venue, setVenue] = useState(null);
