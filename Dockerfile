@@ -4,8 +4,15 @@ WORKDIR /frontend
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm install
 COPY frontend/ ./
-# Inject dummy env vars for build time (actual ones from Secret Manager)
-RUN VITE_MAPS_API_KEY=placeholder npm run build
+ARG VITE_MAPS_API_KEY
+ARG VITE_FIREBASE_API_KEY
+ARG VITE_FIREBASE_PROJECT_ID
+ARG VITE_FIREBASE_DATABASE_URL
+RUN VITE_MAPS_API_KEY=$VITE_MAPS_API_KEY \
+    VITE_FIREBASE_API_KEY=$VITE_FIREBASE_API_KEY \
+    VITE_FIREBASE_PROJECT_ID=$VITE_FIREBASE_PROJECT_ID \
+    VITE_FIREBASE_DATABASE_URL=$VITE_FIREBASE_DATABASE_URL \
+    npm run build
 
 # Stage 2: Serve with FastAPI
 FROM python:3.11-slim
