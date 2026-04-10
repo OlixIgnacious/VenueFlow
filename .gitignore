@@ -229,3 +229,4 @@ credentials/
 # Testing artifacts
 docs/test_tickets.json
 
+backend/.venv_test/
