@@ -24,8 +24,8 @@ import StaffDashboard from './pages/StaffDashboard';
 function App() {
   return (
     <ErrorBoundary>
-      <VenueProvider>
-        <Router>
+      <Router>
+        <VenueProvider>
           <div className="min-h-screen text-slate-100 bg-slate-950">
             <Routes>
               <Route path="/" element={<EventDiscovery />} />
@@ -34,8 +34,8 @@ function App() {
               <Route path="/staff" element={<StaffDashboard />} />
             </Routes>
           </div>
-        </Router>
-      </VenueProvider>
+        </VenueProvider>
+      </Router>
     </ErrorBoundary>
   );
 }

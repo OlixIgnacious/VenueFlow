@@ -3,7 +3,8 @@
  * It handles the retrieval, caching (via sessionStorage), and refreshing of 
  * the operational metadata used throughout the attendee and staff dashboards.
  */
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 
 const VenueContext = createContext();
@@ -22,6 +23,10 @@ export const VenueProvider = ({ children }) => {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const location = useLocation();
+
+  // Memoize search params to avoid unnecessary re-renders
+  const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
 
   /**
    * Fetches the venue and event configuration from the backend.
@@ -62,14 +67,21 @@ export const VenueProvider = ({ children }) => {
   };
 
   /**
-   * Initial load effect. Checks URL parameters for a specific event ID 
-   * before falling back to session storage or defaults.
+   * Monitor URL search parameters for event_id changes.
+   * This ensures that the context refreshes automatically when navigating 
+   * between different events via the discovery page or direct links.
    */
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const eventId = params.get('event_id');
-    fetchConfig(eventId);
-  }, []);
+    const eventIdFromUrl = searchParams.get('event_id');
+    
+    // Only fetch if eventId changed or if we don't have an event yet
+    if (eventIdFromUrl) {
+      fetchConfig(eventIdFromUrl);
+    } else if (!event) {
+      // Initial load without a specific ID still needs to fetch the default session
+      fetchConfig(null);
+    }
+  }, [searchParams]);
 
   return (
     <VenueContext.Provider value={{ venue, event, loading, error, refreshConfig: fetchConfig }}>
