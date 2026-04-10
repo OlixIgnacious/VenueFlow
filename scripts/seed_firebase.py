@@ -1,6 +1,10 @@
 import sys
 import os
 from datetime import datetime, timedelta, timezone
+from dotenv import load_dotenv
+
+# Load environment variables before any backend imports
+load_dotenv()
 
 # Add parent directory to sys.path to import backend modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
