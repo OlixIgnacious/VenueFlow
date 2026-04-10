@@ -38,15 +38,18 @@ graph TD
 ## 🌟 Key Features
 
 ### 🧠 Gemini-Powered Recommendations
-Intelligent routing logic that understands venue context, event type, and current gate density.
+Intelligent routing logic that understands venue context, event type, and current gate density. The system now supports both **Ticket ID-based resolution** and **Raw Seat Reference routing**, making it resilient to manual inputs and varied ticketing formats.
 > [!TIP]
-> The system reconciles denormalized venue config with real-time sensor data to provide "human" tips like *"Gate B is your best bet; it's right by the food court and currently has zero wait."*
+> The AI reconciles denormalized venue config with real-time sensor data to provide "human" tips like *"Gate B is your best bet; it's right by the food court and currently has zero wait."*
 
 ### 🗺️ Live Crowd Heatmap
-Visual dashboard for venue staff to spot bottlenecks before they form, using Google Maps JS API.
+Visual dashboard for venue staff to spot bottlenecks before they form, using Google Maps JS API. Operators can switch between different scheduled events with seamless context synchronization.
+
+### 🔄 Dynamic Event Context Sync
+A robust, URL-aware state management system ensures that attendee and staff interfaces always reflect the correct event context, preventing stale data between sessions.
 
 ### 🎭 Total Vocabulary Versatility
-Labels like "Gate", "Door", or "Pavilion" are injected via configuration — zero hardcoding. Switching from a Football Stadium to a Tech Conference takes one API call.
+Labels like "Gate", "Door", or "Pavilion" are injected via configuration — zero hardcoding. Switching from a Football Stadium to a Tech Conference is handled dynamically via the `event_id` context.
 
 ---
 
