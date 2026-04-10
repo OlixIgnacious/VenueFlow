@@ -21,7 +21,7 @@ def mock_firebase_data():
             "venue_id": "venue_001",
             "type": "sports_match",
             "start_time": "2026-04-09T20:00:00Z",
-            "status": "live"
+            "status": "active"
         }
         mock.get_venue.return_value = {
             "name": "Test Stadium",

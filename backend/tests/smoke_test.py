@@ -30,7 +30,7 @@ def mock_firebase():
              "venue_id": "venue_001",
              "venue_name": "M. Chinnaswamy Stadium",
              "start_time": "2026-04-11T19:00:00+00:00",
-             "status": "upcoming"
+             "status": "active"
          }), \
          patch('backend.services.firebase_client.firebase_client.get_venue', return_value={
              "name": "M. Chinnaswamy Stadium",

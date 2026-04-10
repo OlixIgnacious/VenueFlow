@@ -15,14 +15,14 @@ def test_list_events_success():
             "type": "sports_match",
             "venue_id": "venue_001",
             "start_time": "2026-04-09T20:31:11",
-            "status": "upcoming"
+            "status": "active"
         },
         "event_002": {
             "name": "Bengaluru Tech Summit",
             "type": "conference",
             "venue_id": "venue_002",
             "start_time": "2026-04-14T10:00:00",
-            "status": "upcoming"
+            "status": "active"
         }
     }
     

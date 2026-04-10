@@ -25,7 +25,7 @@ def sample_data():
         type="sports_match",
         venue_id="venue_001",
         start_time=datetime.now() + timedelta(hours=1),
-        status="upcoming"
+        status="active"
     )
     entry_points = [
         EntryPoint(id="entry_A", label="Gate A", coordinates={"lat": 1, "lng": 1}, density=0.2, wait_minutes=2),

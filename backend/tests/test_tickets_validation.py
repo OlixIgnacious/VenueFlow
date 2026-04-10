@@ -19,7 +19,7 @@ def test_get_ticket_success():
     }
 
     with patch("backend.services.firebase_client.firebase_client.get_ticket", return_value=mock_ticket), \
-         patch("backend.services.firebase_client.firebase_client.get_active_event_id", return_value="event_001"), \
+         patch("backend.services.firebase_client.firebase_client.get_event", return_value={"status": "active"}), \
          patch("backend.services.firebase_client.firebase_client.update_ticket_status", return_value=None):
         response = client.get("/api/tickets/IND-AUS-101")
         assert response.status_code == 200
@@ -38,7 +38,7 @@ def test_duplicate_scan_rejected():
         "status": "inside"
     }
     with patch("backend.services.firebase_client.firebase_client.get_ticket", return_value=mock_ticket), \
-         patch("backend.services.firebase_client.firebase_client.get_active_event_id", return_value="event_001"):
+         patch("backend.services.firebase_client.firebase_client.get_event", return_value={"status": "active"}):
         response = client.get("/api/tickets/IND-AUS-101")
         assert response.status_code == 403
         assert "already been scanned" in response.json()["detail"]
@@ -54,7 +54,7 @@ def test_event_mismatch_rejected():
         "status": "valid"
     }
     with patch("backend.services.firebase_client.firebase_client.get_ticket", return_value=mock_ticket), \
-         patch("backend.services.firebase_client.firebase_client.get_active_event_id", return_value="event_001"):
+         patch("backend.services.firebase_client.firebase_client.get_event", return_value={"status": "upcoming"}):
         response = client.get("/api/tickets/IND-AUS-101")
         assert response.status_code == 403
-        assert "not for the currently active event" in response.json()["detail"]
+        assert "not currently active" in response.json()["detail"]
