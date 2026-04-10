@@ -131,7 +131,7 @@ gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
     --role="roles/artifactregistry.writer" \
     --quiet
 
-gcloud iam service-accounts add-iam-policy-binding "github-actions-sa@${PROJECT_ID}.iam.gserviceaccount.com" \
+gcloud iam service-accounts add-iam-policy-binding "${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
     --project="${PROJECT_ID}" \
     --role="roles/iam.serviceAccountUser" \
     --member="serviceAccount:github-actions-sa@${PROJECT_ID}.iam.gserviceaccount.com" \
