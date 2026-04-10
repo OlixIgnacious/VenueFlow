@@ -43,7 +43,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
+          python -m pip install --upgrade pip setuptools wheel
           pip install -r backend/requirements.txt
 
       - name: Run backend tests
@@ -75,6 +75,9 @@ jobs:
         with:
           secrets: |-
             VITE_MAPS_API_KEY:codelab2-490910/MAPS_API_KEY
+            VITE_FIREBASE_API_KEY:codelab2-490910/FIREBASE_API_KEY
+            VITE_FIREBASE_PROJECT_ID:codelab2-490910/FIREBASE_PROJECT_ID
+            VITE_FIREBASE_DATABASE_URL:codelab2-490910/FIREBASE_DATABASE_URL
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -87,4 +90,7 @@ jobs:
       - name: Run frontend tests
         env:
           VITE_MAPS_API_KEY: ${{ steps.secrets.outputs.VITE_MAPS_API_KEY }}
+          VITE_FIREBASE_API_KEY: ${{ steps.secrets.outputs.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_PROJECT_ID: ${{ steps.secrets.outputs.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_DATABASE_URL: ${{ steps.secrets.outputs.VITE_FIREBASE_DATABASE_URL }}
         run: cd frontend && npm run test -- --run

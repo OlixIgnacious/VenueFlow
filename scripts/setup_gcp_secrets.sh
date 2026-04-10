@@ -37,6 +37,8 @@ if [ -f .env ]; then
     MAPS_KEY=$(grep '^MAPS_API_KEY=' .env | cut -d'=' -f2-)
     FIREBASE_URL=$(grep '^FIREBASE_DATABASE_URL=' .env | cut -d'=' -f2-)
     FIREBASE_CREDS=$(grep '^FIREBASE_CREDENTIALS=' .env | cut -d'=' -f2-)
+    FIREBASE_API_KEY=$(grep '^VITE_FIREBASE_API_KEY=' .env | cut -d'=' -f2-)
+    FIREBASE_PROJECT_ID=$(grep '^VITE_FIREBASE_PROJECT_ID=' .env | cut -d'=' -f2-)
     ADMIN_KEY=$(grep '^ADMIN_API_KEY=' .env | cut -d'=' -f2-)
 else
     echo "❌ .env file not found! Please run this script from the project root."
@@ -52,6 +54,8 @@ create_secret "GEMINI_API_KEY" "${GEMINI_KEY//\'/}"
 create_secret "MAPS_API_KEY" "${MAPS_KEY//\'/}"
 create_secret "FIREBASE_DATABASE_URL" "${FIREBASE_URL//\'/}"
 create_secret "FIREBASE_CREDENTIALS" "${FIREBASE_CREDS//\'/}"
+create_secret "FIREBASE_API_KEY" "${FIREBASE_API_KEY//\'/}"
+create_secret "FIREBASE_PROJECT_ID" "${FIREBASE_PROJECT_ID//\'/}"
 create_secret "ADMIN_API_KEY" "${ADMIN_KEY//\'/}"
 
 # 3. Setup Workload Identity Federation
