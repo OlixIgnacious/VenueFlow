@@ -143,4 +143,13 @@ gcloud iam service-accounts add-iam-policy-binding "github-actions-sa@${PROJECT_
     --member="principalSet://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/github-pool/attribute.repository/${REPO}" \
     --quiet
 
+# 5. Make Service Public (Optional for Hackathon)
+echo "🌍 Making VenueFlow service public..."
+gcloud run services add-iam-policy-binding venueflow \
+    --member="allUsers" \
+    --role="roles/run.invoker" \
+    --region="us-central1" \
+    --project="${PROJECT_ID}" \
+    --quiet
+
 echo "✅ Setup Complete!"

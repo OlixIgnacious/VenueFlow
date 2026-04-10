@@ -147,6 +147,7 @@ jobs:
           service: venueflow
           image: us-central1-docker.pkg.dev/codelab2-490910/venue-flow/venueflow:${{ github.sha }}
           region: us-central1
+          flags: --allow-unauthenticated
           env_vars: |-
             GEMINI_API_KEY=${{ steps.secrets.outputs.GEMINI_API_KEY }}
             MAPS_API_KEY=${{ steps.secrets.outputs.MAPS_API_KEY }}
