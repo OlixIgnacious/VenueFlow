@@ -41,6 +41,15 @@ vi.mock('../../context/VenueContext', () => ({
   VenueProvider: ({ children }) => <div>{children}</div>
 }));
 
+vi.mock('../../hooks/useEntryPoints', () => ({
+  useEntryPoints: () => ({
+    entryPoints: {
+      'entry_A': { label: 'Gate A', wait_minutes: 10, status: 'busy' },
+      'entry_B': { label: 'Gate B', wait_minutes: 2, status: 'open' }
+    }
+  })
+}));
+
 describe('Recommendation Page', () => {
   it('renders loading state when loading is true', () => {
     venueContextMock.loading = true;
