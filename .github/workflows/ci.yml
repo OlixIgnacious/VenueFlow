@@ -95,3 +95,61 @@ jobs:
           VITE_FIREBASE_PROJECT_ID: ${{ steps.secrets.outputs.VITE_FIREBASE_PROJECT_ID }}
           VITE_FIREBASE_DATABASE_URL: ${{ steps.secrets.outputs.VITE_FIREBASE_DATABASE_URL }}
         run: cd frontend && npm run test -- --run
+
+  deploy:
+    name: Build & Deploy to Cloud Run
+    needs: [backend-test, frontend-test]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate with GCP
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          token_format: access_token
+          workload_identity_provider: projects/329848942915/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+          service_account: github-actions-sa@codelab2-490910.iam.gserviceaccount.com
+
+      - name: Login to Artifact Registry
+        uses: docker/login-action@v3
+        with:
+          registry: us-central1-docker.pkg.dev
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
+
+      - name: Build and Push Container
+        run: |
+          IMAGE_TAG="us-central1-docker.pkg.dev/codelab2-490910/venue-flow/venueflow:${{ github.sha }}"
+          docker build -t "$IMAGE_TAG" .
+          docker push "$IMAGE_TAG"
+
+      - name: Get Secrets from Secret Manager
+        id: secrets
+        uses: google-github-actions/get-secretmanager-secrets@v2
+        with:
+          secrets: |-
+            GEMINI_API_KEY:codelab2-490910/GEMINI_API_KEY
+            MAPS_API_KEY:codelab2-490910/MAPS_API_KEY
+            FIREBASE_DATABASE_URL:codelab2-490910/FIREBASE_DATABASE_URL
+            FIREBASE_CREDENTIALS:codelab2-490910/FIREBASE_CREDENTIALS
+            ADMIN_API_KEY:codelab2-490910/ADMIN_API_KEY
+
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: venueflow
+          image: us-central1-docker.pkg.dev/codelab2-490910/venue-flow/venueflow:${{ github.sha }}
+          region: us-central1
+          env_vars: |-
+            GEMINI_API_KEY=${{ steps.secrets.outputs.GEMINI_API_KEY }}
+            MAPS_API_KEY=${{ steps.secrets.outputs.MAPS_API_KEY }}
+            FIREBASE_DATABASE_URL=${{ steps.secrets.outputs.FIREBASE_DATABASE_URL }}
+            FIREBASE_CREDENTIALS=${{ steps.secrets.outputs.FIREBASE_CREDENTIALS }}
+            ADMIN_API_KEY=${{ steps.secrets.outputs.ADMIN_API_KEY }}
