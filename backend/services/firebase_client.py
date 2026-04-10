@@ -33,8 +33,8 @@ class FirebaseClient:
                     })
                     logger.info("Firebase initialized successfully.")
                 except Exception as json_err:
-                    logger.error(f"Failed to parse FIREBASE_CREDENTIALS JSON: {json_err}. Raw length: {len(creds_json)}")
-                    raise
+                    logger.error(f"Failed to parse FIREBASE_SERVICE_CREDENTIALS JSON: {json_err}. Raw length: {len(creds_json)}")
+                    return
         except Exception as e:
             logger.error(f"Failed to initialize Firebase: {e}")
 
