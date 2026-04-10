@@ -137,8 +137,10 @@ if os.path.exists(static_dir):
         if os.path.isfile(file_path):
             return FileResponse(file_path)
         
-        # 2. If it's an API call that wasn't caught by the routers, it's a real 404
-        if full_path.startswith("api/"):
+        # 2. Prevent API routes from being swallowed by the catch-all.
+        # This allows FastAPI's native router (and its redirect_slashes logic) 
+        # to handle these appropriately.
+        if full_path.startswith("api"):
             return Response(content='{"detail":"Not Found"}', status_code=404, media_type="application/json")
         
         # 3. Fallback to index.html for SPA routing (e.g., /staff, /entry)

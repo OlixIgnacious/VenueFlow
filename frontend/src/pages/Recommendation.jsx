@@ -70,7 +70,7 @@ const Recommendation = () => {
       try {
         setLoading(true);
         console.log(`[Recommendation] Fetching from ${API_BASE_URL}/api/recommend?ref=${refValue}`);
-        const response = await axios.get(`${API_BASE_URL}/api/recommend/?ref=${encodeURIComponent(refValue)}`);
+        const response = await axios.get(`${API_BASE_URL}/api/recommend?ref=${encodeURIComponent(refValue)}`);
         console.log('[Recommendation] API response:', response.data);
         setRecommendation(response.data);
       } catch (err) {
