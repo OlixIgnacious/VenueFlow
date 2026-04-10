@@ -22,7 +22,8 @@ def test_list_events_success():
         }
     }
     
-    with patch("backend.services.firebase_client.firebase_client.get_active_events", return_value=mock_events):
+    with patch("backend.services.firebase_client.firebase_client.get_active_events", return_value=mock_events), \
+         patch("backend.services.firebase_client.firebase_client.get_venue", return_value={"name": "M. Chinnaswamy Stadium"}):
         response = client.get("/api/events/list")
         assert response.status_code == 200
         data = response.json()

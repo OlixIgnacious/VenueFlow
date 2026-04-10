@@ -14,7 +14,9 @@ def test_get_ticket_success():
         "venue_address": "Cubbon Park, Bengaluru"
     }
 
-    with patch("backend.services.firebase_client.firebase_client.get_ticket", return_value=mock_ticket):
+    with patch("backend.services.firebase_client.firebase_client.get_ticket", return_value=mock_ticket), \
+         patch("backend.services.firebase_client.firebase_client.get_active_event_id", return_value="event_001"), \
+         patch("backend.services.firebase_client.firebase_client.update_ticket_status", return_value=None):
         response = client.get("/api/tickets/IND-AUS-101")
         assert response.status_code == 200
         data = response.json()
