@@ -30,6 +30,13 @@ async def lifespan(app: FastAPI):
         raise RuntimeError("ADMIN_API_KEY environment variable is required.")
         
     logger.info("VenueFlow API starting up")
+    
+    # Check if Firebase is initialized
+    import firebase_admin
+    if not firebase_admin._apps:
+        logger.error("[CRITICAL] Firebase was not initialized. Startup aborted.")
+        raise RuntimeError("Firebase initialization failed. Check FIREBASE_CREDENTIALS.")
+        
     simulator.start()
     yield
     logger.info("VenueFlow API shutting down")

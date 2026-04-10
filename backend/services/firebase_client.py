@@ -17,16 +17,24 @@ class FirebaseClient:
     def _initialize(self):
         try:
             if not firebase_admin._apps:
-                creds_dict = settings.firebase_creds_dict
-                if creds_dict:
+                creds_json = settings.FIREBASE_CREDENTIALS
+                if not creds_json:
+                    logger.warning("FIREBASE_CREDENTIALS environment variable is empty. Firebase will not be initialized.")
+                    return
+
+                try:
+                    creds_dict = settings.firebase_creds_dict
+                    if not creds_dict:
+                        raise ValueError("Settings.firebase_creds_dict returned None - JSON parsing likely failed.")
+                        
                     cred = credentials.Certificate(creds_dict)
                     firebase_admin.initialize_app(cred, {
                         'databaseURL': settings.FIREBASE_DATABASE_URL
                     })
-                else:
-                    # Fallback for local dev if credentials are not provided as a string
-                    # but maybe as a file path or just skipped for now
-                    logger.warning("No Firebase credentials found. Firebase operations will fail.")
+                    logger.info("Firebase initialized successfully.")
+                except Exception as json_err:
+                    logger.error(f"Failed to parse FIREBASE_CREDENTIALS JSON: {json_err}. Raw length: {len(creds_json)}")
+                    raise
         except Exception as e:
             logger.error(f"Failed to initialize Firebase: {e}")
 

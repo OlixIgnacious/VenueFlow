@@ -152,5 +152,6 @@ jobs:
             GEMINI_API_KEY=${{ steps.secrets.outputs.GEMINI_API_KEY }}
             MAPS_API_KEY=${{ steps.secrets.outputs.MAPS_API_KEY }}
             FIREBASE_DATABASE_URL=${{ steps.secrets.outputs.FIREBASE_DATABASE_URL }}
-            FIREBASE_CREDENTIALS=${{ steps.secrets.outputs.FIREBASE_CREDENTIALS }}
             ADMIN_API_KEY=${{ steps.secrets.outputs.ADMIN_API_KEY }}
+          secrets: |-
+            FIREBASE_CREDENTIALS=FIREBASE_CREDENTIALS:latest
