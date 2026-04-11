@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Search, Calendar, MapPin, ArrowRight, Loader2, IndianRupee } from 'lucide-react';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+const API_BASE_URL = 'http://localhost:8000';
 
 /**
  * Event Discovery Page.
@@ -32,9 +32,20 @@ const EventDiscovery = () => {
     const fetchEvents = async () => {
       try {
         const response = await axios.get(`${API_BASE_URL}/api/events/list`);
-        setEvents(response.data);
+        // Normalize: Ensure events is ALWAYS an object {id: data}
+        const data = response.data;
+        if (Array.isArray(data)) {
+          const normalized = {};
+          data.forEach(item => {
+            if (item && item.id) normalized[item.id] = item;
+          });
+          setEvents(normalized);
+        } else {
+          setEvents(data || {});
+        }
       } catch (error) {
         console.error("Failed to fetch events:", error);
+        setEvents({}); // Fallback to empty object
       } finally {
         setLoading(false);
       }
@@ -45,9 +56,10 @@ const EventDiscovery = () => {
   /**
    * Filters the master event list based on the user's search input.
    */
-  const filteredEvents = Object.entries(events).filter(([id, event]) => 
-    event.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    event.type.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredEvents = Object.entries(events || {}).filter(([id, event]) => 
+    (event?.name || "").toLowerCase().includes((searchTerm || "").toLowerCase()) ||
+    (event?.type || "").toLowerCase().includes((searchTerm || "").toLowerCase()) ||
+    (event?.venue_name || "").toLowerCase().includes((searchTerm || "").toLowerCase())
   );
 
   if (loading) {
@@ -89,7 +101,7 @@ const EventDiscovery = () => {
             <div className="h-48 bg-slate-100 dark:bg-slate-800 relative">
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 to-transparent opacity-60 dark:opacity-80" />
               <div className="absolute bottom-6 left-6 right-6">
-                 <span className="bg-blue-600 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest text-white shadow-lg">{event.type.replace('_', ' ')}</span>
+                 <span className="bg-blue-600 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest text-white shadow-lg">{(event?.type || "General").replace('_', ' ')}</span>
                  <h2 className="text-xl font-bold mt-2 leading-tight text-white">{event.name}</h2>
               </div>
             </div>

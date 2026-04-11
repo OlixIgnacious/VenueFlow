@@ -8,7 +8,7 @@ import VenueMap from '../components/VenueMap';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { ArrowLeft, Loader2, Sparkles, Navigation } from 'lucide-react';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+const API_BASE_URL = 'http://localhost:8000';
 
 /**
  * AI Recommendation Page.
@@ -115,8 +115,10 @@ const Recommendation = () => {
     );
   }
 
-  const recommendedEntry = entryPoints[recommendation?.recommended_entry];
-  const altEntry = entryPoints[recommendation?.alt_entry];
+  const recommendedEntryId = recommendation?.recommended_entry;
+  const altEntryId = recommendation?.alt_entry;
+  const recommendedEntry = entryPoints && recommendedEntryId ? entryPoints[recommendedEntryId] : null;
+  const altEntry = entryPoints && altEntryId ? entryPoints[altEntryId] : null;
 
   return (
     <div className="max-w-xl mx-auto p-6 min-h-screen space-y-8 pb-12 animate-in fade-in duration-500">
