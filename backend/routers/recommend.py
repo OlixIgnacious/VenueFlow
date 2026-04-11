@@ -177,7 +177,7 @@ async def get_recommendation(
             "crowd_level": best_entry.status,
             "reason": f"{reason_prefix} Recommending {best_entry.label}.",
             "alt_entry": "entry_A" if best_entry.id != "entry_A" else "entry_B",
-            "tip": "AI is temporarily unavailable, using high-precision GPS fallback.",
+            "tip": "AI recommendation is currently unavailable, using real-time sensor data.",
         }
     else:
         # Cache successful AI responses
