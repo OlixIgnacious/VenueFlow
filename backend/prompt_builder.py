@@ -49,7 +49,10 @@ Always respond with valid JSON only — no markdown, no text outside the JSON ob
     for ep in entry_points:
         dist, dir = get_geospatial_context(venue.coordinates, ep.coordinates)
         tags_str = f" [Near: {', '.join(ep.proximity_tags)}]" if ep.proximity_tags else ""
-        summary = f"- {ep.label}: {dist}m {dir}{tags_str}. Wait: {ep.wait_minutes} min ({int(ep.density * 100)}% density)"
+        
+        # Harden signal for high density to prevent AI over-rationalization
+        warning = " [!! CRITICAL CONGESTION !!]" if ep.density > 0.9 else ""
+        summary = f"- {ep.label}: {dist}m {dir}{tags_str}. Wait: {ep.wait_minutes} min ({int(ep.density * 100)}% density){warning}"
         entry_summaries.append(summary)
         
     entry_states = "\n".join(entry_summaries)
@@ -59,18 +62,18 @@ Always respond with valid JSON only — no markdown, no text outside the JSON ob
 Current {venue.entry_label} states (relative to venue center):
 {entry_states}
 
-Decision Criteria:
-1. Shortest Path: Prioritize the {venue.entry_label} with matching labels/sections in its [Near: ...] tags.
-2. Cardinal Logic: Use the {venue.entry_label} direction (North, South, etc.) if it logically matches the attendee's {venue.location_ref_label}.
-3. Density Trade-off: If the closest {venue.entry_label} is >80% density or has >15 min wait, consider the next best option.
+Decision Criteria (STRICT HIERARCHY):
+1. **MANDATORY TAG MATCH**: Find the entry point where the [Near: ...] tags match "{ref_value}".
+2. **DISQUALIFICATION RULE**: If a gate has "[!! CRITICAL CONGESTION !!]", it is FORBIDDEN. You must choose a different gate even if it has a tag match.
+3. **Cardinal Navigation**: Use direction logic ONLY if no tag match exists.
 
 Respond with JSON:
 {{
-  "recommended_entry": "string (the entry point ID, e.g. entry_A)",
+  "recommended_entry": "string (TECHNICAL ID ONLY, e.g. entry_A, entry_B. Do not use labels like 'Gate A')",
   "wait_minutes": integer,
   "crowd_level": "low" | "moderate" | "high",
-  "reason": "string (one friendly sentence, use correct vocabulary)",
-  "alt_entry": "string (another entry point ID)",
+  "reason": "string (friendly sentence explaining the match)",
+  "alt_entry": "string (technical ID for an alternative)",
   "tip": "string or null"
 }}"""
 

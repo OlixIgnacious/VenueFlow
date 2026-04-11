@@ -94,7 +94,7 @@ class Recommendation(BaseModel):
     wait_minutes: int
     crowd_level: str # low, moderate, high
     reason: str
-    alt_entry: str
+    alt_entry: Optional[str] = None
     tip: Optional[str] = None
 
 class ActiveEventPointer(BaseModel):

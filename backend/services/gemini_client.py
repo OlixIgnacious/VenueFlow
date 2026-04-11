@@ -13,22 +13,19 @@ from backend.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Constants for retry logic
+# No retries in minimal test mode
 RETRY_STATUSES = {429, 500, 502, 503, 504}
-MAX_RETRIES = 3
-BASE_BACKOFF = 2.0
+MAX_RETRIES = 1 
 
 
 class GeminiClient:
     """
-    Client for interacting with Gemini 1.5 Flash via REST API.
-    
-    Simplified to use plain-text JSON prompting for maximum reliability.
+    Client for interacting with Gemini 2.5 Flash via REST API.
     """
     def __init__(self):
-        """Initializes the client with the API key and model configuration."""
+        """Initializes the client with the API key."""
         self.api_key = settings.GEMINI_API_KEY
-        self.model = "gemini-3.1-flash-live-preview"
+        self.model = "gemini-2.5-flash"
         self.base_url = "https://generativelanguage.googleapis.com/v1beta/models"
 
     async def generate_recommendation(
@@ -37,62 +34,41 @@ class GeminiClient:
         user_message: str
     ) -> Optional[dict[str, Any]]:
         """
-        Sends a request to Gemini to generate a structured entry recommendation.
+        Sends a request to Gemini with production-ready retry logic.
         """
         if not self.api_key:
-            logger.warning("[GEMINI] No GEMINI_API_KEY set — skipping AI call")
             return None
 
         url = f"{self.base_url}/{self.model}:generateContent?key={self.api_key}"
         
-        # We now embed the JSON requirement in the prompt for 100% reliability
-        enriched_user_message = (
-            f"{user_message}\n\n"
-            "Respond ONLY with a valid JSON object matching this schema:\n"
-            '{"recommended_entry": "STRING", "wait_minutes": INT, "crowd_level": "low|medium|high", "reason": "STRING", "alt_entry": "STRING", "tip": "STRING"}'
-        )
-
         payload = {
             "contents": [
                 {
-                    "role": "user",
-                    "parts": [{"text": f"{system_prompt}\n\n{enriched_user_message}"}],
+                    "parts": [{"text": f"{system_prompt}\n\n{user_message}\n\nRespond ONLY with valid JSON."}],
                 }
             ],
             "generationConfig": {
-                # We still request JSON mode for formatting assistance
                 "response_mime_type": "application/json",
                 "temperature": 0.2
             },
         }
 
-        for attempt in range(1, MAX_RETRIES + 1):
-            try:
-                logger.info(f"[GEMINI] Calling {self.model} (attempt {attempt}/{MAX_RETRIES})")
-                async with httpx.AsyncClient(timeout=20.0) as client:
+        async with httpx.AsyncClient(timeout=25.0) as client:
+            for attempt in range(1, MAX_RETRIES + 1):
+                try:
                     response = await client.post(url, json=payload)
-
-                if response.status_code == 200:
-                    result = response.json()
-                    text_content = result["candidates"][0]["content"]["parts"][0]["text"].strip()
-                    parsed = json.loads(text_content)
-                    logger.info(f"[GEMINI] ✓ Successful Logic Execution: {list(parsed.keys())}")
-                    return parsed
-
-                if response.status_code in RETRY_STATUSES:
-                    wait = BASE_BACKOFF * (2 ** (attempt - 1))
-                    logger.warning(f"[GEMINI] {response.status_code} on attempt {attempt} — retrying in {wait}s")
-                    if attempt < MAX_RETRIES:
-                        await asyncio.sleep(wait)
+                    if response.status_code == 200:
+                        result = response.json()
+                        text = result["candidates"][0]["content"]["parts"][0]["text"]
+                        return json.loads(text)
+                    
+                    if response.status_code in RETRY_STATUSES and attempt < MAX_RETRIES:
+                        await asyncio.sleep(2 ** attempt)
                         continue
-                
-                logger.error(f"[GEMINI] HTTP {response.status_code}: {response.text[:200]}")
-                return None
-
-            except Exception as e:
-                logger.error(f"[GEMINI] Unexpected Logic Error: {e}")
-                return None
-
+                    
+                    return None
+                except Exception:
+                    return None
         return None
 
 # Global singleton instance

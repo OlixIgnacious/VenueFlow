@@ -130,7 +130,13 @@ async def get_recommendation(
     entry_points = [EntryPoint(id=eid, **data) for eid, data in entry_points_data.items()]
 
     # ── 4. Call Gemini AI ─────────────────────────────────────────────────────
-    system_prompt, user_message = build_gemini_prompts(venue, event, entry_points, ref)
+    ref_value = ticket_data.get('location_ref', ref)
+    system_prompt, user_message = build_gemini_prompts(venue, event, entry_points, ref_value)
+    
+    # DEBUG: Print exact prompt context for verification
+    logger.info(f"[PROMPT_DEBUG] Target: {ref_value}")
+    logger.info(f"[PROMPT_DEBUG] Context:\n{user_message}")
+    
     recommendation_data = await gemini_client.generate_recommendation(system_prompt, user_message)
 
     # ── 5. Fallback if Gemini unavailable ─────────────────────────────────────
@@ -152,28 +158,29 @@ async def get_recommendation(
             gate_distances.append((dist, ep))
         
         search_ref = ticket_data.get('location_ref', ref).lower()
-        matching_gates = [eg for d, eg in gate_distances if any(tag.lower() in search_ref for tag in eg.proximity_tags)]
         
-        # Sort matching gates by density
-        if matching_gates:
-            matching_gates.sort(key=lambda x: x.density)
-            best_entry = matching_gates[0]
-            
-            # Density safety check: If even the best match is overloaded (> 80%), pivot to lowest density gate overall
-            if best_entry.density > 0.8:
-                best_entry = min(fresh_entries, key=lambda x: x.density)
-                reason_prefix = f"Primary gate for {search_ref} is currently overloaded (>80%)."
-            else:
-                reason_prefix = f"Found a direct section match for '{search_ref}'."
+        # 1. Filter for safe gates (density < 0.9)
+        safe_gates = [(d, eg) for d, eg in gate_distances if eg.density < 0.9]
+        
+        # 2. Try to find a tag match within safe gates
+        matching_safe_gates = [eg for d, eg in safe_gates if any(tag.lower() in search_ref for tag in eg.proximity_tags)]
+        
+        if matching_safe_gates:
+            # Pick the lowest density match among safe options
+            matching_safe_gates.sort(key=lambda x: x.density)
+            best_entry = matching_safe_gates[0]
+            reason_prefix = f"Found a safe path for '{search_ref}'."
         else:
-            # No tag match, pick the mathematically closest gate that isn't overloaded
-            available_gates = [eg for d, eg in gate_distances if eg.density < 0.8]
-            if available_gates:
-                best_entry = min(available_gates, key=lambda x: x[0])[1]
-                reason_prefix = "Calculated the mathematically shortest path to your section."
+            # 3. No safe match found, pivot to closest safe gate regardless of tags
+            if safe_gates:
+                # Get the mathematically closest safe gate
+                safe_gates.sort(key=lambda x: x[0])
+                best_entry = safe_gates[0][1]
+                reason_prefix = f"Direct entry for {search_ref} is busy. Redirecting to closest safe gate."
             else:
+                # 4. Crisis mode: All gates are >90% dense, pick the absolute minimum
                 best_entry = min(fresh_entries, key=lambda x: x.density)
-                reason_prefix = "All nearby gates are busy, picking the least congested entry."
+                reason_prefix = "All entries are critically congested. Routing to the least busy gate."
 
         logger.warning(f"[RECOMMEND] AI unavailable — smart spatial fallback: {best_entry.id}")
         
