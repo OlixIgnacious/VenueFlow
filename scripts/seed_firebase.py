@@ -78,9 +78,13 @@ def seed():
     # 4. Entry Points for Venue 001 (Stadium)
     entry_points_001 = {}
     gate_labels = ["A", "B", "C", "D", "E", "F"]
+    directions = ["North", "North-East", "East", "South-East", "South", "South-West"]
+    
     for i, label in enumerate(gate_labels):
         entry_points_001[f"entry_{label}"] = {
             "label": f"Gate {label}",
+            "proximity_tags": [f"Block {label}", f"Zone {i+1}"],
+            "direction": directions[i],
             "coordinates": {
                 "lat": 12.9720 + (i * 0.0005),
                 "lng": 77.5940 + (i * 0.0005)
@@ -95,10 +99,13 @@ def seed():
 
     # 5. Entry Points for Venue 002 (Convention Center)
     entry_points_002 = {}
+    directions_002 = ["North", "North-East", "East", "South-East", "South", "South-West", "West", "North-West"]
     for i in range(8):
         label = chr(65 + i) # A, B, C...
         entry_points_002[f"entry_{label}"] = {
             "label": f"Pavilion Entry {label}",
+            "proximity_tags": [f"Zone {label}", f"Hall {1 if i < 4 else 2}"],
+            "direction": directions_002[i],
             "coordinates": {
                 "lat": 13.0690 + (i * 0.0005),
                 "lng": 77.5780 + (i * 0.0005)

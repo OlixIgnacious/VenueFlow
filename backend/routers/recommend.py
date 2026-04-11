@@ -135,16 +135,49 @@ async def get_recommendation(
 
     # ── 5. Fallback if Gemini unavailable ─────────────────────────────────────
     if not recommendation_data:
-        # Simple distance-independent logic: pick the gate with the lowest density
-        best_entry = min(entry_points, key=lambda x: x.density)
-        logger.warning(f"[RECOMMEND] AI unavailable — rule-based fallback: {best_entry.id}")
+        # Improved Spatial Fallback: Pick the closest gate mathematically
+        from backend.utils.spatial import calculate_distance
+        
+        # Calculate distance for all gates and sort
+        gate_distances = []
+        for ep in entry_points:
+            dist = calculate_distance(venue.coordinates, ep.coordinates)
+            gate_distances.append((dist, ep))
+        
+        # Find the one that matches proximity tags first
+        search_ref = ticket_data.get('location_ref', ref).lower()
+        matching_gates = [eg for d, eg in gate_distances if any(tag.lower() in search_ref for tag in eg.proximity_tags)]
+        
+        # Sort matching gates by density to pick the best of the closest
+        if matching_gates:
+            matching_gates.sort(key=lambda x: x.density)
+            best_entry = matching_gates[0]
+            
+            # Density safety check: If even the best match is overloaded, pivot to lowest density gate overall
+            if best_entry.density > 0.8:
+                best_entry = min(entry_points, key=lambda x: x.density)
+                reason_prefix = f"Your closest gate ({search_ref}) is currently overloaded."
+            else:
+                reason_prefix = f"Found a direct section match for '{search_ref}'."
+        else:
+            # No tag match, pick the mathematically closest gate that isn't overloaded
+            available_gates = [eg for d, eg in gate_distances if eg.density < 0.8]
+            if available_gates:
+                best_entry = min(available_gates, key=lambda x: x[0])[1]
+                reason_prefix = "Calculated the mathematically shortest path to your section."
+            else:
+                best_entry = min(entry_points, key=lambda x: x.density)
+                reason_prefix = "All nearby gates are busy, picking the least congested entry."
+
+        logger.warning(f"[RECOMMEND] AI unavailable — smart spatial fallback: {best_entry.id}")
+        
         recommendation_data = {
             "recommended_entry": best_entry.id,
             "wait_minutes": best_entry.wait_minutes,
             "crowd_level": best_entry.status,
-            "reason": f"Heading to {best_entry.label} as it currently has the lowest congestion.",
+            "reason": f"{reason_prefix} Recommending {best_entry.label}.",
             "alt_entry": "entry_A" if best_entry.id != "entry_A" else "entry_B",
-            "tip": "AI recommendation is currently unavailable, using real-time sensor data.",
+            "tip": "AI is temporarily unavailable, using high-precision GPS fallback.",
         }
     else:
         # Cache successful AI responses

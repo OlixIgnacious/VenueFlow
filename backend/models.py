@@ -75,6 +75,8 @@ class EntryPoint(BaseModel):
     status: str = "low" # low, moderate, high
     capacity: int = 500
     current_count: int = 0
+    proximity_tags: List[str] = Field(default_factory=list)
+    direction: Optional[str] = None
 
 class Recommendation(BaseModel):
     """

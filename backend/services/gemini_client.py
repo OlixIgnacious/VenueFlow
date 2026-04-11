@@ -16,16 +16,14 @@ logger = logging.getLogger(__name__)
 # Constants for retry logic
 RETRY_STATUSES = {429, 500, 502, 503, 504}
 MAX_RETRIES = 3
-# Back-off: 2s, 4s, 8s  (with up to 1s jitter each)
 BASE_BACKOFF = 2.0
 
 
 class GeminiClient:
     """
-    Client for interacting with the Gemini 2.0 Flash API.
+    Client for interacting with Gemini 2.0 Flash via REST API.
     
-    Handles authentication, structured content generation with native 
-    JSON schemas, and robust error handling with retries.
+    Now using a project-native API key for high-throughput (360 RPM).
     """
     def __init__(self):
         """Initializes the client with the API key and model configuration."""
@@ -39,19 +37,7 @@ class GeminiClient:
         user_message: str
     ) -> Optional[dict[str, Any]]:
         """
-        Sends a request to the Gemini model to generate a structured entry recommendation.
-        
-        Args:
-            system_prompt (str): The context and rules for the AI persona.
-            user_message (str): Real-time venue and attendee data to process.
-            
-        Returns:
-            Optional[dict[str, Any]]: Parsed JSON recommendation or None if generation fails.
-        
-        Notes: 
-            - Retries up to 3 times on transient network/API errors (429/5xx).
-            - Uses an explicit JSON schema to enforce structured output.
-            - Router should handle None returns by falling back to rule-based routing.
+        Sends a request to Gemini to generate a structured entry recommendation.
         """
         if not self.api_key:
             logger.warning("[GEMINI] No GEMINI_API_KEY set — skipping AI call")
@@ -59,7 +45,7 @@ class GeminiClient:
 
         url = f"{self.base_url}/{self.model}:generateContent?key={self.api_key}"
         
-        # Native structured output schema for Gemini 2.0
+        # Native structured output schema
         recommendation_schema = {
             "type": "object",
             "properties": {
@@ -82,68 +68,36 @@ class GeminiClient:
             ],
             "generationConfig": {
                 "response_mime_type": "application/json",
-                "response_schema": recommendation_schema
+                "response_schema": recommendation_schema,
+                "temperature": 0.2
             },
         }
 
         for attempt in range(1, MAX_RETRIES + 1):
             try:
-                logger.info(f"[GEMINI] Calling {self.model} with native schema (attempt {attempt}/{MAX_RETRIES})")
-                async with httpx.AsyncClient(timeout=15.0) as client:
+                logger.info(f"[GEMINI] Calling {self.model} via REST (attempt {attempt}/{MAX_RETRIES})")
+                async with httpx.AsyncClient(timeout=20.0) as client:
                     response = await client.post(url, json=payload)
 
                 if response.status_code == 200:
                     result = response.json()
                     text_content = result["candidates"][0]["content"]["parts"][0]["text"].strip()
                     parsed = json.loads(text_content)
-                    logger.info(f"[GEMINI] ✓ Controlled response received: {list(parsed.keys())}")
+                    logger.info(f"[GEMINI] ✓ Success: {list(parsed.keys())}")
                     return parsed
 
                 if response.status_code in RETRY_STATUSES:
-                    # Respect Retry-After header if present
-                    retry_after = response.headers.get("Retry-After")
-                    if retry_after:
-                        try:
-                            wait = min(float(retry_after), 30.0)
-                        except ValueError:
-                            wait = BASE_BACKOFF * (2 ** (attempt - 1))
-                    else:
-                        wait = BASE_BACKOFF * (2 ** (attempt - 1))
-
-                    logger.warning(
-                        f"[GEMINI] {response.status_code} on attempt {attempt} — "
-                        f"retrying in {wait:.1f}s"
-                    )
+                    wait = BASE_BACKOFF * (2 ** (attempt - 1))
+                    logger.warning(f"[GEMINI] {response.status_code} on attempt {attempt} — retrying in {wait}s")
                     if attempt < MAX_RETRIES:
                         await asyncio.sleep(wait)
                         continue
-                    else:
-                        logger.error(
-                            f"[GEMINI] All {MAX_RETRIES} attempts exhausted (HTTP {response.status_code}). "
-                            "Falling back to rule-based routing."
-                        )
-                        return None
-
-                # Non-retryable error
-                logger.error(
-                    f"[GEMINI] Non-retryable HTTP {response.status_code}: {response.text[:300]}"
-                )
-                return None
-
-            except httpx.TimeoutException:
-                logger.warning(f"[GEMINI] Timeout on attempt {attempt}/{MAX_RETRIES}")
-                if attempt < MAX_RETRIES:
-                    await asyncio.sleep(BASE_BACKOFF * attempt)
-                    continue
-                logger.error("[GEMINI] All attempts timed out — falling back to rule-based routing")
-                return None
-
-            except json.JSONDecodeError as e:
-                logger.error(f"[GEMINI] JSON parse error: {e}")
+                
+                logger.error(f"[GEMINI] HTTP {response.status_code}: {response.text[:200]}")
                 return None
 
             except Exception as e:
-                logger.error(f"[GEMINI] Unexpected error ({type(e).__name__}): {e}")
+                logger.error(f"[GEMINI] Unexpected error: {e}")
                 return None
 
         return None

@@ -42,15 +42,27 @@ Your job is to minimise attendee wait times by recommending the least congested 
 Always respond with valid JSON only — no markdown, no text outside the JSON object."""
 
     # Serialize the current state of all entry points for the AI context
-    entry_states = "\n".join([
-        f"- {ep.label}: density {int(ep.density * 100)}%, wait {ep.wait_minutes} min, status {ep.status}"
-        for ep in entry_points
-    ])
+    # Now includes calculated distance/direction and semantic proximity tags
+    from backend.utils.spatial import get_geospatial_context
+    
+    entry_summaries = []
+    for ep in entry_points:
+        dist, dir = get_geospatial_context(venue.coordinates, ep.coordinates)
+        tags_str = f" [Near: {', '.join(ep.proximity_tags)}]" if ep.proximity_tags else ""
+        summary = f"- {ep.label}: {dist}m {dir}{tags_str}. Wait: {ep.wait_minutes} min ({int(ep.density * 100)}% density)"
+        entry_summaries.append(summary)
+        
+    entry_states = "\n".join(entry_summaries)
 
     # User message provides the specific request and formatting instructions
     user_message = f"""Attendee {venue.location_ref_label}: {ref_value}
-Current {venue.entry_label} states:
+Current {venue.entry_label} states (relative to venue center):
 {entry_states}
+
+Decision Criteria:
+1. Shortest Path: Prioritize the {venue.entry_label} with matching labels/sections in its [Near: ...] tags.
+2. Cardinal Logic: Use the {venue.entry_label} direction (North, South, etc.) if it logically matches the attendee's {venue.location_ref_label}.
+3. Density Trade-off: If the closest {venue.entry_label} is >80% density or has >15 min wait, consider the next best option.
 
 Respond with JSON:
 {{
