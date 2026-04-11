@@ -135,28 +135,34 @@ async def get_recommendation(
 
     # ── 5. Fallback if Gemini unavailable ─────────────────────────────────────
     if not recommendation_data:
-        # Improved Spatial Fallback: Pick the closest gate mathematically
+        # RE-FETCH Fresh Data for Fallback (Avoid Stale AI-wait data)
+        fresh_entry_data = firebase_client.get_entry_points(event_id)
+        if not fresh_entry_data:
+             fresh_entry_data = entry_points_data # Safety fallback
+        
+        # Re-map to model objects
+        fresh_entries = [EntryPoint(id=eid, **data) for eid, data in fresh_entry_data.items()]
+        
         from backend.utils.spatial import calculate_distance
         
-        # Calculate distance for all gates and sort
+        # Calculate fresh distances
         gate_distances = []
-        for ep in entry_points:
+        for ep in fresh_entries:
             dist = calculate_distance(venue.coordinates, ep.coordinates)
             gate_distances.append((dist, ep))
         
-        # Find the one that matches proximity tags first
         search_ref = ticket_data.get('location_ref', ref).lower()
         matching_gates = [eg for d, eg in gate_distances if any(tag.lower() in search_ref for tag in eg.proximity_tags)]
         
-        # Sort matching gates by density to pick the best of the closest
+        # Sort matching gates by density
         if matching_gates:
             matching_gates.sort(key=lambda x: x.density)
             best_entry = matching_gates[0]
             
-            # Density safety check: If even the best match is overloaded, pivot to lowest density gate overall
+            # Density safety check: If even the best match is overloaded (> 80%), pivot to lowest density gate overall
             if best_entry.density > 0.8:
-                best_entry = min(entry_points, key=lambda x: x.density)
-                reason_prefix = f"Your closest gate ({search_ref}) is currently overloaded."
+                best_entry = min(fresh_entries, key=lambda x: x.density)
+                reason_prefix = f"Primary gate for {search_ref} is currently overloaded (>80%)."
             else:
                 reason_prefix = f"Found a direct section match for '{search_ref}'."
         else:
@@ -166,7 +172,7 @@ async def get_recommendation(
                 best_entry = min(available_gates, key=lambda x: x[0])[1]
                 reason_prefix = "Calculated the mathematically shortest path to your section."
             else:
-                best_entry = min(entry_points, key=lambda x: x.density)
+                best_entry = min(fresh_entries, key=lambda x: x.density)
                 reason_prefix = "All nearby gates are busy, picking the least congested entry."
 
         logger.warning(f"[RECOMMEND] AI unavailable — smart spatial fallback: {best_entry.id}")
@@ -177,7 +183,7 @@ async def get_recommendation(
             "crowd_level": best_entry.status,
             "reason": f"{reason_prefix} Recommending {best_entry.label}.",
             "alt_entry": "entry_A" if best_entry.id != "entry_A" else "entry_B",
-            "tip": "AI recommendation is currently unavailable, using real-time sensor data.",
+            "tip": "AI reasoning unavailable - using spatial routing fallback.",
         }
     else:
         # Cache successful AI responses

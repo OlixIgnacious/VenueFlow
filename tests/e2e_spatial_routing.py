@@ -29,7 +29,7 @@ async def test_stadium_proximity():
     print(f"Tip: {result.tip}")
     
     # SUCCESS = Either AI reasoning OR Correct Mathematical Fallback
-    assert result.tip is None or "AI recommendation is currently unavailable" in result.tip, "Unexpected tip format"
+    assert result.tip is None or "AI reasoning unavailable" in result.tip, "Unexpected tip format"
     assert "entry_B" in result.recommended_entry
     print("✅ Stadium proximity match passed.")
 
