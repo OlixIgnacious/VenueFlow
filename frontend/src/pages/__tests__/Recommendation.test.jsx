@@ -25,7 +25,8 @@ const mockRecommendation = {
   wait_minutes: 2,
   crowd_level: 'low',
   reason: 'Gate B is much faster.',
-  alt_entry: 'entry_A'
+  tips: 'AI reasoning unavailable',
+  alt_entry_id: 'entry_A'
 };
 
 // Define a mutable object to control mock values
