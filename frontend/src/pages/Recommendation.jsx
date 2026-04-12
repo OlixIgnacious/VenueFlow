@@ -8,7 +8,7 @@ import VenueMap from '../components/VenueMap';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { ArrowLeft, Loader2, Sparkles, Navigation } from 'lucide-react';
 
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 /**
  * AI Recommendation Page.
@@ -116,7 +116,7 @@ const Recommendation = () => {
   }
 
   const recommendedEntryId = recommendation?.recommended_entry;
-  const altEntryId = recommendation?.alt_entry;
+  const altEntryId = recommendation?.alt_entry_id;
   const recommendedEntry = entryPoints && recommendedEntryId ? entryPoints[recommendedEntryId] : null;
   const altEntry = entryPoints && altEntryId ? entryPoints[altEntryId] : null;
 
@@ -145,7 +145,7 @@ const Recommendation = () => {
             wait_minutes={recommendedEntry.wait_minutes}
             status={recommendedEntry.status}
             reason={recommendation.reason}
-            tip={recommendation.tip}
+            tip={recommendation.tips}
             isRecommended={true}
           />
         )}
