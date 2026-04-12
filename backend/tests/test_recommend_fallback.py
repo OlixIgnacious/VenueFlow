@@ -65,5 +65,6 @@ def test_recommendation_fallback(mock_gemini_client, mock_firebase_data):
     # Should pick Gate B (density 0.2) over Gate A (0.8)
     assert data["recommended_entry"] == "entry_B"
     assert data["crowd_level"] == "low"
-    assert "lowest congestion" in data["reason"]
-    assert "AI recommendation is currently unavailable" in data["tip"]
+    assert "Gate B" in data["reason"]
+    assert "AI reasoning unavailable" in data["tips"]
+    assert data["alt_entry_id"] == "entry_A"

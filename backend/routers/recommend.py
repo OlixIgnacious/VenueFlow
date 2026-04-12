@@ -171,12 +171,12 @@ async def get_recommendation(
             best_entry = matching_safe_gates[0]
             reason_prefix = f"Found a safe path for '{search_ref}'."
         else:
-            # 3. No safe match found, pivot to closest safe gate regardless of tags
+            # 3. No safe match found, pick the lowest density safe gate first, then distance
             if safe_gates:
-                # Get the mathematically closest safe gate
-                safe_gates.sort(key=lambda x: x[0])
+                # Sort by density (x[1].density) then distance (x[0])
+                safe_gates.sort(key=lambda x: (x[1].density, x[0]))
                 best_entry = safe_gates[0][1]
-                reason_prefix = f"Direct entry for {search_ref} is busy. Redirecting to closest safe gate."
+                reason_prefix = f"Routing to best available entry for {search_ref}."
             else:
                 # 4. Crisis mode: All gates are >90% dense, pick the absolute minimum
                 best_entry = min(fresh_entries, key=lambda x: x.density)
@@ -189,8 +189,8 @@ async def get_recommendation(
             "wait_minutes": best_entry.wait_minutes,
             "crowd_level": best_entry.status,
             "reason": f"{reason_prefix} Recommending {best_entry.label}.",
-            "alt_entry": "entry_A" if best_entry.id != "entry_A" else "entry_B",
-            "tip": "AI reasoning unavailable - using spatial routing fallback.",
+            "alt_entry_id": "entry_A" if best_entry.id != "entry_A" else "entry_B",
+            "tips": "AI reasoning unavailable - using spatial routing fallback.",
         }
     else:
         # Cache successful AI responses

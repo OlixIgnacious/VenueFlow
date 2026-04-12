@@ -70,11 +70,9 @@ Decision Criteria (STRICT HIERARCHY):
 Respond with JSON:
 {{
   "recommended_entry": "string (TECHNICAL ID ONLY, e.g. entry_A, entry_B. Do not use labels like 'Gate A')",
-  "wait_minutes": integer,
-  "crowd_level": "low" | "moderate" | "high",
   "reason": "string (friendly sentence explaining the match)",
-  "alt_entry": "string (technical ID for an alternative)",
-  "tip": "string or null"
+  "alt_entry_id": "string (technical ID for an alternative)",
+  "tips": "string or null"
 }}"""
 
     return system_prompt, user_message

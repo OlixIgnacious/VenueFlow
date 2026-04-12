@@ -91,11 +91,11 @@ class Recommendation(BaseModel):
         tip (Optional[str]): Context-aware tip (e.g., 'Turn left at the fountain').
     """
     recommended_entry: str
-    wait_minutes: int
-    crowd_level: str # low, moderate, high
+    wait_minutes: Optional[int] = None
+    crowd_level: Optional[str] = None
     reason: str
-    alt_entry: Optional[str] = None
-    tip: Optional[str] = None
+    alt_entry_id: Optional[str] = None
+    tips: Optional[str] = None
 
 class ActiveEventPointer(BaseModel):
     """Points to the currently active/live event for the system."""

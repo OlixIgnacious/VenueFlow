@@ -54,7 +54,7 @@ def test_event_mismatch_rejected():
         "status": "valid"
     }
     with patch("backend.services.firebase_client.firebase_client.get_ticket", return_value=mock_ticket), \
-         patch("backend.services.firebase_client.firebase_client.get_event", return_value={"status": "upcoming"}):
+         patch("backend.services.firebase_client.firebase_client.get_event", return_value={"status": "ended"}):
         response = client.get("/api/tickets/IND-AUS-101")
         assert response.status_code == 403
         assert "not currently active" in response.json()["detail"]

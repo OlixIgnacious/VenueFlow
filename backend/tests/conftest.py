@@ -14,10 +14,8 @@ def mock_gemini_client():
         # Default mock response for a successful AI recommendation
         mock.return_value = {
             "recommended_entry": "entry_B",
-            "wait_minutes": 2,
-            "crowd_level": "low",
             "reason": "Mocked AI recommends Gate B because it has significantly lower density and a shorter wait time compared to other options.",
-            "alt_entry": "entry_A",
-            "tip": "This is a mocked AI response for testing."
+            "alt_entry_id": "entry_A",
+            "tips": "This is a mocked AI response for testing."
         }
         yield mock
