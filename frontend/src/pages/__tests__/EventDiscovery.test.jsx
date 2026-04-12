@@ -23,12 +23,12 @@ const mockEvents = {
     "start_time": "2026-04-09T20:31:11",
     "status": "upcoming"
   },
-  "event_002": {
-    "name": "Tech Summit",
-    "type": "conference",
-    "venue_id": "venue_002",
-    "start_time": "2026-04-14T10:00:00",
-    "status": "upcoming"
+  "event_004": {
+    "name": "Summer Solstice Fest 2026",
+    "type": "festival",
+    "venue_id": "venue_004",
+    "start_time": "2026-06-21T12:00:00",
+    "status": "live"
   }
 };
 
@@ -56,14 +56,14 @@ describe('EventDiscovery', () => {
     await waitFor(() => {
       expect(screen.getByText('India vs Australia — T20')).toBeInTheDocument();
     });
-    expect(screen.getByText('Tech Summit')).toBeInTheDocument();
+    expect(screen.getByText('Summer Solstice Fest 2026')).toBeInTheDocument();
 
     // Test search
     const searchInput = screen.getByPlaceholderText(/search by name/i);
     fireEvent.change(searchInput, { target: { value: 'India' } });
 
     expect(screen.getByText('India vs Australia — T20')).toBeInTheDocument();
-    expect(screen.queryByText('Tech Summit')).not.toBeInTheDocument();
+    expect(screen.queryByText('Summer Solstice Fest 2026')).not.toBeInTheDocument();
   });
 
   it('has no accessibility violations', async () => {
