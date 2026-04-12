@@ -215,6 +215,14 @@ backend/pytest.ini
 .pytest_cache/
 backend/.pytest_cache/
 frontend/coverage/
+backend.log
+scratch/
+*.json.gz
+*.heapsnapshot
+
+# OS specific
+.DS_Store
+Thumbs.db
 
 # Secrets
 *-firebase-adminsdk-*.json

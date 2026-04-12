@@ -82,7 +82,7 @@ async def get_recommendation(
 
     # ── 1b. Security Check: Is the event active? ─────────────────────────────
     event_data = firebase_client.get_event(event_id)
-    if not event_data or event_data.get('status') != 'active':
+    if not event_data or event_data.get('status') not in ['active', 'live', 'upcoming']:
         logger.warning(f"[RECOMMEND] Attempted access to non-active event='{event_id}'")
         raise HTTPException(
             status_code=403,

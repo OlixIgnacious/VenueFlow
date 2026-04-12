@@ -3,7 +3,7 @@
 [![CI/CD Pipeline](https://github.com/OlixIgnacious/VenueFlow/actions/workflows/deploy.yml/badge.svg)](https://github.com/OlixIgnacious/VenueFlow/actions)
 [![FastAPI](https://img.shields.io/badge/FastAPI-005863?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)](https://reactjs.org/)
-[![Gemini 2.0](https://img.shields.io/badge/Gemini_2.0_Flash-4285F4?style=flat&logo=google&logoColor=white)](https://deepmind.google/technologies/gemini/)
+[![Gemini 2.5](https://img.shields.io/badge/Gemini_2.5_Flash-4285F4?style=flat&logo=google&logoColor=white)](https://deepmind.google/technologies/gemini/)
 
 VenueFlow is a **venue-agnostic, event-type-aware** crowd routing platform. It solves entry-point congestion at large-scale events by providing attendees with personalized AI-powered recommendations and staff with real-time crowd intelligence dashboards.
 
@@ -30,12 +30,36 @@ graph TD
         H <--> I
     end
 
-    F --> J[Vertex AI / Gemini 2.0]
+    F --> J[Vertex AI / Gemini 2.5 Flash]
 ```
 
 ---
 
+## 🧪 AI Evaluation & Test Cases
+
+The system's intelligence is validated across three primary operational scenarios. To verify these, run `python3 scripts/seed_firebase.py` and use the following Ticket IDs in the Attendee UI:
+
+### 1. Semantic Proximity Matching
+**Ticket ID**: `IND-AUS-101` (Event: India vs Australia)
+- **Scenario**: Attendee is assigned to **Block B**.
+- **AI Reasoning**: The agent matches "Block B" to **Gate B** via proximity tags.
+- **Result**: Recommends Gate B with a logical "human" tip about its location.
+
+### 2. The Congestion Pivot (Safety First)
+**Ticket ID**: `FEST-VIP-01` (Event: Summer Solstice Fest)
+- **Scenario**: Attendee is assigned to **Zone A**. **Portal A** is closest but is at **95% density** (Critical).
+- **AI Reasoning**: The internal hierarchy detects the density threshold violation and strictly forbids Portal A.
+- **Result**: Proactively pivots the user to **Portal D** or **E**, even if they are slightly further away, prioritizing safety over distance.
+
+### 3. Geospatial Fallback (Resilience)
+**Scenario**: Simulation of AI Service Down / Rate Limited.
+- **Reasoning**: The system triggers its mathematical "Spatial Fallback" engine.
+- **Result**: Calculates the Haversine distance to all gates and selects the closest gate with `<90%` density. The UI explicitly notifies the user: *"AI reasoning unavailable — using spatial routing fallback."*
+
+---
+
 ## 🌟 Key Features
+[...]
 
 ### 🧠 Gemini-Powered Recommendations
 Intelligent routing logic that understands venue context, event type, and current gate density. The system now supports both **Ticket ID-based resolution** and **Raw Seat Reference routing**, making it resilient to manual inputs and varied ticketing formats.

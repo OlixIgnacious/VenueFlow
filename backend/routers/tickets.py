@@ -48,7 +48,7 @@ async def get_ticket(request: Request, ticket_id: str) -> Ticket:
     event_id = ticket_data.get('event_id')
     event_data = firebase_client.get_event(event_id)
     
-    if not event_data or event_data.get('status') != 'active':
+    if not event_data or event_data.get('status') not in ['active', 'live', 'upcoming']:
         logger.warning(
             f"[TICKET] Event context invalid — ticket.event_id='{event_id}' "
             f"status='{event_data.get('status') if event_data else 'NOT_FOUND'}'"

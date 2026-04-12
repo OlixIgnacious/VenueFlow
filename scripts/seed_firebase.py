@@ -30,7 +30,7 @@ def seed():
     """
     print("Seeding Firebase...")
 
-    # 1. Venues: Physical locations with geographic metadata
+    # 1. Venues: Diverse physical locations with unique taxonomies
     venues = {
         "venue_001": {
             "name": "M. Chinnaswamy Stadium",
@@ -41,17 +41,33 @@ def seed():
             "entry_point_count": 6
         },
         "venue_002": {
-            "name": "Bangalore International Exhibition Centre",
+            "name": "Bangalore Exhibition Centre",
             "type": "exhibition_hall",
             "entry_label": "Pavilion Entry",
             "location_ref_label": "Zone",
             "coordinates": {"lat": 13.0695, "lng": 77.5786},
             "entry_point_count": 8
+        },
+        "venue_003": {
+            "name": "Royal Albert Hall",
+            "type": "auditorium",
+            "entry_label": "Door",
+            "location_ref_label": "Box / Tier",
+            "coordinates": {"lat": 51.5009, "lng": -0.1774},
+            "entry_point_count": 12
+        },
+        "venue_004": {
+            "name": "Coachella Valley Fest",
+            "type": "festival",
+            "entry_label": "Portal",
+            "location_ref_label": "Camping Zone",
+            "coordinates": {"lat": 33.6784, "lng": -116.2372},
+            "entry_point_count": 12
         }
     }
     db.reference('/venues').set(venues)
 
-    # 2. Events: Scheduled occurrences at specific venues
+    # 2. Events: Global scheduled events
     events = {
         "event_001": {
             "name": "India vs Australia — T20",
@@ -59,66 +75,61 @@ def seed():
             "venue_id": "venue_001",
             "venue_name": "M. Chinnaswamy Stadium",
             "start_time": (datetime.now(timezone.utc) + timedelta(hours=2)).isoformat(),
-            "status": "active"
+            "status": "live"
         },
-        "event_002": {
-            "name": "Bengaluru Tech Summit 2026",
-            "type": "conference",
-            "venue_id": "venue_002",
-            "venue_name": "Bangalore International Exhibition Centre",
-            "start_time": (datetime.now(timezone.utc) + timedelta(days=5)).isoformat(),
-            "status": "active"
+        "event_003": {
+            "name": "Classic Night: Beethoven's 9th",
+            "type": "concert",
+            "venue_id": "venue_003",
+            "venue_name": "Royal Albert Hall",
+            "start_time": (datetime.now(timezone.utc) + timedelta(days=2)).isoformat(),
+            "status": "upcoming"
+        },
+        "event_004": {
+            "name": "Summer Solstice Fest 2026",
+            "type": "festival",
+            "venue_id": "venue_004",
+            "venue_name": "Coachella Valley Fest",
+            "start_time": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat(),
+            "status": "live"
         }
     }
     db.reference('/events').set(events)
 
-    # 3. Active Event Pointer: Dictates the context for the attendee dashboard
-    db.reference('/active_event').set({"event_id": "event_001"})
-
-    # 4. Entry Points for Venue 001 (Stadium)
+    # 3. Entry Points for Venue 001 (Stadium)
     entry_points_001 = {}
     gate_labels = ["A", "B", "C", "D", "E", "F"]
-    directions = ["North", "North-East", "East", "South-East", "South", "South-West"]
-    
     for i, label in enumerate(gate_labels):
         entry_points_001[f"entry_{label}"] = {
             "label": f"Gate {label}",
             "proximity_tags": [f"Block {label}", f"Zone {i+1}"],
-            "direction": directions[i],
-            "coordinates": {
-                "lat": 12.9720 + (i * 0.0005),
-                "lng": 77.5940 + (i * 0.0005)
-            },
-            "density": 0.1,
-            "wait_minutes": 2,
-            "status": "low",
+            "coordinates": {"lat": 12.9720 + (i * 0.0005), "lng": 77.5940 + (i * 0.0005)},
+            "density": 0.1 if label != "B" else 0.85, # Set Gate B to heavy traffic
+            "wait_minutes": 2 if label != "B" else 25,
+            "status": "low" if label != "B" else "high",
             "capacity": 500,
-            "current_count": 50
+            "current_count": 50 if label != "B" else 425
         }
     db.reference('/entry_points/event_001').set(entry_points_001)
 
-    # 5. Entry Points for Venue 002 (Convention Center)
-    entry_points_002 = {}
-    directions_002 = ["North", "North-East", "East", "South-East", "South", "South-West", "West", "North-West"]
-    for i in range(8):
-        label = chr(65 + i) # A, B, C...
-        entry_points_002[f"entry_{label}"] = {
-            "label": f"Pavilion Entry {label}",
-            "proximity_tags": [f"Zone {label}", f"Hall {1 if i < 4 else 2}"],
-            "direction": directions_002[i],
-            "coordinates": {
-                "lat": 13.0690 + (i * 0.0005),
-                "lng": 77.5780 + (i * 0.0005)
-            },
-            "density": 0.05,
-            "wait_minutes": 1,
-            "status": "low",
-            "capacity": 800,
-            "current_count": 40
+    # 4. Entry Points for Venue 004 (Festival - HIGH STRESS SCENARIO)
+    entry_points_004 = {}
+    for i in range(12):
+        label = chr(65 + i)
+        is_bottleneck = label in ["A", "B", "C"]
+        entry_points_004[f"entry_{label}"] = {
+            "label": f"Portal {label}",
+            "proximity_tags": [f"Zone {label}"],
+            "coordinates": {"lat": 33.6780 + (i * 0.001), "lng": -116.2370 + (i * 0.001)},
+            "density": 0.95 if is_bottleneck else 0.05, # MANDATORY Pivot Test
+            "wait_minutes": 60 if is_bottleneck else 2,
+            "status": "high" if is_bottleneck else "low",
+            "capacity": 2000,
+            "current_count": 1900 if is_bottleneck else 100
         }
-    db.reference('/entry_points/event_002').set(entry_points_002)
+    db.reference('/entry_points/event_004').set(entry_points_004)
 
-    # 6. Sample Tickets: Used for validating the end-to-end scanner and recommendation flow
+    # 5. Global Sample Tickets
     tickets = {
         "IND-AUS-101": {
             "event_id": "event_001",
@@ -129,19 +140,29 @@ def seed():
             "venue_address": "Cubbon Park, Bengaluru, Karnataka 560001",
             "status": "valid"
         },
-        "TECH-SUMMIT-01": {
-            "event_id": "event_002",
-            "event_name": "Bengaluru Tech Summit 2026",
-            "date": "April 14, 2026",
+        "FEST-VIP-01": {
+            "event_id": "event_004",
+            "event_name": "Summer Solstice Fest 2026",
+            "date": "June 21, 2026",
             "persons": 1,
-            "location_ref": "Zone C",
-            "venue_address": "10th Mile, Tumkur Main Road, Madavara, Bengaluru 560073",
+            "location_ref": "Zone A", # Targeted at a Bottleneck Gate
+            "venue_address": "81-800 Avenue 51, Indio, CA 92201",
+            "status": "valid"
+        },
+        "RAH-BOX-12": {
+            "event_id": "event_003",
+            "event_name": "Classic Night",
+            "date": "April 13, 2026",
+            "persons": 2,
+            "location_ref": "Box 12, West Tier",
+            "venue_address": "Kensington Gore, London SW7 2AP, UK",
             "status": "valid"
         }
     }
     db.reference('/tickets').set(tickets)
 
-    print("Seeding complete.")
+    db.reference('/active_event').set({"event_id": "event_001"})
+    print("Expansion Seeding complete.")
 
 if __name__ == "__main__":
     seed()

@@ -21,28 +21,43 @@ async def list_events() -> Dict[str, EventConfig]:
                                including resolved venue names.
     """
     events_data = firebase_client.get_active_events()
+    import logging
+    logger = logging.getLogger("venueflow")
+    
     if not events_data:
+        logger.warning("[EVENTS] firebase_client.get_active_events() returned NOTHING")
         return {}
+    
+    logger.info(f"[EVENTS] Successfully retrieved {len(events_data)} raw events from Firebase")
     
     # Cache venues to avoid redundant lookups within the same request
     venues_cache = {}
 
     result = {}
     for eid, data in events_data.items():
-        # Only include active events in the general listing
-        if data.get('status') != 'active':
+        status = data.get('status')
+        logger.info(f"[EVENTS] Iterating: id='{eid}' status='{status}'")
+        
+        # Only include active/upcoming/live events in the general listing
+        if status not in ['active', 'upcoming', 'live']:
+            logger.info(f"[EVENTS] Skipping '{eid}' due to status filter")
             continue
             
-        data['id'] = eid
-        
-        # Populate venue_name for display in list views
-        venue_id = data.get('venue_id')
-        if venue_id:
-            if venue_id not in venues_cache:
-                v_data = firebase_client.get_venue(venue_id)
-                venues_cache[venue_id] = v_data.get('name') if v_data else "Unknown Venue"
-            data['venue_name'] = venues_cache[venue_id]
+        try:
+            data['id'] = eid
+            venue_id = data.get('venue_id')
+            if venue_id:
+                if venue_id not in venues_cache:
+                    v_data = firebase_client.get_venue(venue_id)
+                    venues_cache[venue_id] = v_data.get('name') if v_data else "Unknown Venue"
+                data['venue_name'] = venues_cache[venue_id]
             
-        result[eid] = EventConfig(**data)
-        
+            event_obj = EventConfig(**data)
+            result[eid] = event_obj
+            logger.info(f"[EVENTS] Successfully added '{eid}' to result")
+        except Exception as e:
+            logger.error(f"[EVENTS] Failed to process eventID='{eid}': {e}")
+            continue
+            
+    logger.info(f"[EVENTS] Returning {len(result)} events to frontend")
     return result
