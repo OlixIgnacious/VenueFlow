@@ -81,14 +81,15 @@ export const VenueProvider = ({ children }) => {
     console.log(`[VenueContext] URL Change Detected. event_id (URL): ${eventIdFromUrl}, current (State): ${event?.id}`);
 
     if (eventIdFromUrl) {
-      // If we have an ID in the URL, it ALWAYS takes precedence
-      fetchConfig(eventIdFromUrl);
-    } else if (!event && !loading) {
-      // Only fetch default if we have nothing at all
+      if (eventIdFromUrl !== event?.id) {
+        fetchConfig(eventIdFromUrl);
+      }
+    } else if (!event) {
+      // Fetch default/cached if we have nothing in state
       console.log('[VenueContext] No event in state or URL, fetching default/cached.');
       fetchConfig(null);
     }
-  }, [location.search]); // Depend directly on location.search string
+  }, [location.search]);
 
   return (
     <VenueContext.Provider value={{ venue, event, loading, error, refreshConfig: fetchConfig }}>
