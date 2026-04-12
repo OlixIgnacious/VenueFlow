@@ -105,7 +105,7 @@ Create a `.env` file in the root directory:
 # Backend
 GEMINI_API_KEY=your_gemini_key
 FIREBASE_DATABASE_URL=https://your-project.firebaseio.com
-FIREBASE_CREDENTIALS={"type": "service_account", ...}
+FIREBASE_SERVICE_CREDENTIALS={"type": "service_account", ...}
 
 # Frontend (Vite)
 VITE_MAPS_API_KEY=your_maps_key
@@ -130,7 +130,7 @@ cd frontend && npm install && npm run dev
 
 - **Backend**: FastAPI (Python 3.11) with Google-style Docstrings.
 - **Frontend**: React 18 (Vite, Tailwind CSS) with JSDoc standards.
-- **AI**: Gemini 2.0 Flash via Vertex AI.
+- **AI**: Gemini 2.5 Flash via REST API (Google AI Studio).
 - **Cloud**: Automated keyless deployment to **Google Cloud Run** using GitHub OIDC / Workload Identity Federation.
 - **Real-time**: Firebase Realtime Database for sub-second gate density updates.
 
