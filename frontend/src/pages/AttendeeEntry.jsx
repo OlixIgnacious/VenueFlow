@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useVenue } from '../context/VenueContext';
-import { MapPin, ArrowRight, Loader2, QrCode, CheckCircle2, Ticket as TicketIcon } from 'lucide-react';
+import { MapPin, ArrowRight, Loader2, QrCode, CheckCircle2, Navigation, Ticket as TicketIcon } from 'lucide-react';
 import axios from 'axios';
 import TicketScanner from '../components/TicketScanner';
 
