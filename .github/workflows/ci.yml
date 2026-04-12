@@ -50,7 +50,7 @@ jobs:
       - name: Run backend tests
         env:
           FIREBASE_DATABASE_URL: ${{ steps.secrets.outputs.FIREBASE_DATABASE_URL }}
-          FIREBASE_CREDENTIALS: ${{ steps.secrets.outputs.FIREBASE_CREDENTIALS }}
+          FIREBASE_SERVICE_CREDENTIALS: ${{ steps.secrets.outputs.FIREBASE_CREDENTIALS }}
           GEMINI_API_KEY: ${{ steps.secrets.outputs.GEMINI_API_KEY }}
           ADMIN_API_KEY: ${{ steps.secrets.outputs.ADMIN_API_KEY }}
           TESTING: "true" # Enforces AI mocking via conftest.py
