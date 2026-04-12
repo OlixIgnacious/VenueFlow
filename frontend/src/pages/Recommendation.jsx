@@ -122,13 +122,22 @@ const Recommendation = () => {
 
   return (
     <div className="max-w-xl mx-auto p-6 min-h-screen space-y-8 pb-12 animate-in fade-in duration-500">
-      <button 
-        onClick={() => navigate(-1)}
-        className="flex items-center text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-white transition-colors"
-      >
-        <ArrowLeft size={18} className="mr-2" />
-        <span>Back</span>
-      </button>
+      <div className="flex items-center justify-between">
+        <button 
+          onClick={() => navigate(-1)}
+          className="flex items-center text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-white transition-colors"
+        >
+          <ArrowLeft size={18} className="mr-2" />
+          <span>Back</span>
+        </button>
+        <button 
+          onClick={() => navigate('/')}
+          className="text-xs font-bold text-slate-400 uppercase tracking-widest hover:text-blue-500 transition-colors flex items-center"
+        >
+          <Navigation size={14} className="mr-1.5" />
+          Home
+        </button>
+      </div>
 
       <div className="space-y-2">
         <h2 className="text-slate-500 dark:text-slate-400 font-medium uppercase tracking-widest text-sm flex items-center">

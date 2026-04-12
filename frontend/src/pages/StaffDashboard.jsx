@@ -104,9 +104,12 @@ const StaffDashboard = () => {
     <div className="flex bg-slate-50 dark:bg-slate-950 min-h-screen text-slate-900 dark:text-slate-100">
       {/* Sidebar navigation and control panel */}
       <div className="w-64 border-r border-slate-200 dark:border-slate-800 p-6 space-y-8 flex flex-col bg-white dark:bg-slate-950 transition-colors">
-        <div className="flex items-center space-x-3 px-2">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-white shadow-md">V</div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">VenueFlow</h1>
+        <div 
+          onClick={() => navigate('/')}
+          className="flex items-center space-x-3 px-2 cursor-pointer group"
+        >
+          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-white shadow-md group-hover:scale-110 transition-transform">V</div>
+          <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100 group-hover:text-blue-600 transition-colors">VenueFlow</h1>
         </div>
         
         {/* Event Switcher UI */}

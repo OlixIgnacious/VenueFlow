@@ -1,3 +1,4 @@
+
 """
 Firebase Seeding Script.
 Initializes the Firebase Realtime Database with sample venues, events, 
@@ -28,7 +29,7 @@ def seed():
     3. Real-time entry point states (gates).
     4. Valid attendee tickets for testing flows.
     """
-    print("Seeding Firebase...")
+    print("🚀 Seeding Firebase with Noice Production Data...")
 
     # 1. Venues: Diverse physical locations with unique taxonomies
     venues = {
@@ -104,7 +105,7 @@ def seed():
             "label": f"Gate {label}",
             "proximity_tags": [f"Block {label}", f"Zone {i+1}"],
             "coordinates": {"lat": 12.9720 + (i * 0.0005), "lng": 77.5940 + (i * 0.0005)},
-            "density": 0.1 if label != "B" else 0.85, # Set Gate B to heavy traffic
+            "density": 0.1 if label != "B" else 0.85, 
             "wait_minutes": 2 if label != "B" else 25,
             "status": "low" if label != "B" else "high",
             "capacity": 500,
@@ -112,16 +113,34 @@ def seed():
         }
     db.reference('/entry_points/event_001').set(entry_points_001)
 
-    # 4. Entry Points for Venue 004 (Festival - HIGH STRESS SCENARIO)
+    # 4. Entry Points for Venue 003 (Royal Albert Hall - NO MORE TECH SUMMIT HALLUCINATIONS)
+    entry_points_003 = {}
+    for i in range(12):
+        label = str(i + 1)
+        # Doors 1-4 are congested near the Stalls
+        is_bottleneck = i < 4
+        entry_points_003[f"door_{label}"] = {
+            "label": f"Door {label}",
+            "proximity_tags": [f"Box {label}", f"Tier {label}"],
+            "coordinates": {"lat": 51.5005 + (i * 0.0001), "lng": -0.1770 + (i * 0.0001)},
+            "density": 0.8 if is_bottleneck else 0.15,
+            "wait_minutes": 15 if is_bottleneck else 3,
+            "status": "high" if is_bottleneck else "low",
+            "capacity": 200,
+            "current_count": 160 if is_bottleneck else 30
+        }
+    db.reference('/entry_points/event_003').set(entry_points_003)
+
+    # 5. Entry Points for Venue 004 (Festival - PURE COACHELLA CONTEXT)
     entry_points_004 = {}
     for i in range(12):
         label = chr(65 + i)
         is_bottleneck = label in ["A", "B", "C"]
         entry_points_004[f"entry_{label}"] = {
             "label": f"Portal {label}",
-            "proximity_tags": [f"Zone {label}"],
+            "proximity_tags": [f"Zone {label}", f"Meadow {label}"],
             "coordinates": {"lat": 33.6780 + (i * 0.001), "lng": -116.2370 + (i * 0.001)},
-            "density": 0.95 if is_bottleneck else 0.05, # MANDATORY Pivot Test
+            "density": 0.95 if is_bottleneck else 0.05, 
             "wait_minutes": 60 if is_bottleneck else 2,
             "status": "high" if is_bottleneck else "low",
             "capacity": 2000,
@@ -129,7 +148,7 @@ def seed():
         }
     db.reference('/entry_points/event_004').set(entry_points_004)
 
-    # 5. Global Sample Tickets
+    # 6. Global Sample Tickets
     tickets = {
         "IND-AUS-101": {
             "event_id": "event_001",
@@ -145,7 +164,7 @@ def seed():
             "event_name": "Summer Solstice Fest 2026",
             "date": "June 21, 2026",
             "persons": 1,
-            "location_ref": "Zone A", # Targeted at a Bottleneck Gate
+            "location_ref": "Zone A", 
             "venue_address": "81-800 Avenue 51, Indio, CA 92201",
             "status": "valid"
         },
@@ -162,7 +181,7 @@ def seed():
     db.reference('/tickets').set(tickets)
 
     db.reference('/active_event').set({"event_id": "event_001"})
-    print("Expansion Seeding complete.")
+    print("✅ Full Expansion Context Seeding complete.")
 
 if __name__ == "__main__":
     seed()

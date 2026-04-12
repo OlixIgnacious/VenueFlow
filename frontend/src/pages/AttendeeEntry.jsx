@@ -121,7 +121,12 @@ const AttendeeEntry = () => {
             <MapPin size={14} />
             <span>{venue.name}</span>
           </div>
-          <h1 className="text-4xl font-bold tracking-tight">Venue<span className="text-blue-500">Flow</span></h1>
+          <h1 
+            onClick={() => navigate('/')}
+            className="text-4xl font-bold tracking-tight cursor-pointer hover:text-blue-500 transition-colors"
+          >
+            Venue<span className="text-blue-500">Flow</span>
+          </h1>
           <p className="text-slate-400">
             Entry routing for <span className="text-slate-100 font-medium italic">{event.name}</span>
           </p>
