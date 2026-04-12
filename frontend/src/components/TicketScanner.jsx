@@ -71,9 +71,20 @@ const TicketScanner = ({ onScan, onClose, event_id }) => {
     }
   };
 
-  const sampleIds = event_id === 'event_001'
-    ? ['IND-AUS-101', 'IND-AUS-102', 'IND-AUS-103', 'IND-AUS-104', 'IND-AUS-105', 'IND-AUS-VIP-01']
-    : ['TECH-SUMMIT-01', 'TECH-SUMMIT-02', 'TECH-SUMMIT-03', 'TECH-SUMMIT-04', 'TECH-SUMMIT-05', 'TECH-SUMMIT-SPEAKER-01'];
+  const getSampleIds = () => {
+    switch (event_id) {
+      case 'event_001':
+        return ['IND-AUS-101', 'IND-AUS-102', 'IND-AUS-103', 'IND-AUS-104', 'IND-AUS-105', 'IND-AUS-VIP-01'];
+      case 'event_003':
+        return ['TICKET-CLASSIC-F397BBC2', 'TICKET-CLASSIC-42597B03', 'RAH-BOX-12'];
+      case 'event_004':
+        return ['TICKET-FEST-E40CDFCA', 'TICKET-FEST-A1AF8C6A', 'FEST-VIP-01'];
+      default:
+        return ['DEMO-SCAN-01', 'DEMO-SCAN-02'];
+    }
+  };
+
+  const sampleIds = getSampleIds();
 
   return (
     <div 

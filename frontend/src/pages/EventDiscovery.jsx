@@ -124,6 +124,11 @@ const EventDiscovery = () => {
           </div>
         ))}
       </div>
+      <div className="pt-12 text-center border-t border-slate-100 dark:border-slate-800 pb-8">
+        <p className="text-xs text-slate-500 uppercase tracking-widest font-medium">
+          Powered by Gemini 2.5 Flash
+        </p>
+      </div>
     </div>
   );
 };

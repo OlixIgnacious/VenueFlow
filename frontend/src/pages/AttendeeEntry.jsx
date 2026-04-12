@@ -113,6 +113,14 @@ const AttendeeEntry = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6 relative overflow-hidden">
+      <button 
+        onClick={() => navigate('/')}
+        className="absolute top-6 right-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-full shadow-lg hover:shadow-xl hover:text-blue-500 transition-all z-20 group"
+        title="Return to Discovery"
+      >
+        <Navigation size={20} className="group-hover:rotate-12 transition-transform" />
+      </button>
+
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-600/10 blur-[120px] rounded-full -z-10" />
       
       <div className="max-w-md w-full p-8 glass rounded-3xl space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
@@ -170,7 +178,7 @@ const AttendeeEntry = () => {
                 <span className="flex-shrink mx-4 text-slate-600 text-xs uppercase font-bold tracking-widest">Or enter manually</span>
                 <div className="flex-grow border-t border-slate-800"></div>
               </div>
-
+ 
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase tracking-widest text-slate-500 px-1">
                   Your {venue.location_ref_label}
@@ -183,7 +191,7 @@ const AttendeeEntry = () => {
                   className="w-full bg-slate-900/50 border border-slate-700 rounded-2xl px-6 py-4 outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all text-xl"
                 />
               </div>
-
+ 
               <button
                 onClick={() => handleFindEntry()}
                 disabled={!refValue}
@@ -195,10 +203,10 @@ const AttendeeEntry = () => {
             </div>
           </div>
         )}
-
+ 
         <div className="pt-4 text-center">
           <p className="text-xs text-slate-500 uppercase tracking-widest font-medium">
-            Powered by Gemini 2.0 Flash
+            Powered by Gemini 2.5 Flash
           </p>
         </div>
       </div>

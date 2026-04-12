@@ -121,21 +121,22 @@ const Recommendation = () => {
   const altEntry = entryPoints && altEntryId ? entryPoints[altEntryId] : null;
 
   return (
-    <div className="max-w-xl mx-auto p-6 min-h-screen space-y-8 pb-12 animate-in fade-in duration-500">
-      <div className="flex items-center justify-between">
+    <div className="max-w-xl mx-auto p-6 min-h-screen space-y-8 pb-12 animate-in fade-in duration-500 relative">
+      <button 
+        onClick={() => navigate('/')}
+        className="absolute top-6 right-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-full shadow-lg hover:shadow-xl hover:text-blue-500 transition-all z-20 group"
+        title="Return to Discovery"
+      >
+        <Navigation size={20} className="group-hover:rotate-12 transition-transform" />
+      </button>
+
+      <div className="flex items-center">
         <button 
           onClick={() => navigate(-1)}
           className="flex items-center text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-white transition-colors"
         >
           <ArrowLeft size={18} className="mr-2" />
           <span>Back</span>
-        </button>
-        <button 
-          onClick={() => navigate('/')}
-          className="text-xs font-bold text-slate-400 uppercase tracking-widest hover:text-blue-500 transition-colors flex items-center"
-        >
-          <Navigation size={14} className="mr-1.5" />
-          Home
         </button>
       </div>
 
@@ -188,6 +189,11 @@ const Recommendation = () => {
           <Navigation size={12} className="mr-1.5" />
           WALKING ROUTE
         </div>
+      </div>
+      <div className="pt-12 text-center border-t border-slate-100 dark:border-slate-800 pb-8 mt-8">
+        <p className="text-xs text-slate-500 uppercase tracking-widest font-medium">
+          Powered by Gemini 2.5 Flash
+        </p>
       </div>
     </div>
   );
