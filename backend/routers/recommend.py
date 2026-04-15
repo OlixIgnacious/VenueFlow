@@ -21,7 +21,8 @@ limiter = Limiter(key_func=get_remote_address)
 
 # Memory-safe in-memory cache: (event_id, ref) -> recommendation_data
 CACHE_TTL = 300  # 5 minutes
-_recommendation_cache = TTLCache(maxsize=500, ttl=CACHE_TTL)
+_recommendation_cache = TTLCache(maxsize=10000, ttl=CACHE_TTL)
+
 
 
 @router.get("", response_model=Recommendation,

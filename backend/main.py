@@ -15,7 +15,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import Response, FileResponse
-from backend.routers import venue, entry_points, recommend, admin, events, tickets
+from backend.routers import venue, entry_points, recommend, admin, events, tickets, auth, users
 from backend.config import settings
 from contextlib import asynccontextmanager
 import os
@@ -112,6 +112,8 @@ app.include_router(venue.router,        prefix="/api/venue",     tags=["Venue"])
 app.include_router(entry_points.router, prefix="/api",           tags=["Entry Points"])
 app.include_router(recommend.router,    prefix="/api/recommend", tags=["Recommendation"])
 app.include_router(admin.router,        prefix="/api/admin",     tags=["Admin"])
+app.include_router(auth.router,         prefix="/api/auth",      tags=["Auth"])
+app.include_router(users.router,        prefix="/api/users",     tags=["Users"])
 
 @app.get("/api/health")
 async def health_check():

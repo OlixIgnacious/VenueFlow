@@ -237,3 +237,7 @@ credentials/
 docs/test_tickets.json
 
 backend/.venv_test/
+
+# Playwright
+frontend/playwright-report/
+frontend/test-results/

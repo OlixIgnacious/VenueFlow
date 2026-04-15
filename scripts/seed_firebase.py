@@ -17,7 +17,7 @@ load_dotenv()
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from backend.services.firebase_client import firebase_client
-from firebase_admin import db
+from firebase_admin import db, auth
 
 def seed():
     """
@@ -157,7 +157,9 @@ def seed():
             "persons": 2,
             "location_ref": "Block B, Row 12",
             "venue_address": "Cubbon Park, Bengaluru, Karnataka 560001",
-            "status": "valid"
+            "status": "valid",
+            "owner_name": "Tony Stark",
+            "claimed_by_uid": "tony_stark_uid"
         },
         "FEST-VIP-01": {
             "event_id": "event_004",
@@ -166,7 +168,9 @@ def seed():
             "persons": 1,
             "location_ref": "Zone A", 
             "venue_address": "81-800 Avenue 51, Indio, CA 92201",
-            "status": "valid"
+            "status": "valid",
+            "owner_name": "Bruce Banner",
+            "claimed_by_uid": None
         },
         "RAH-BOX-12": {
             "event_id": "event_003",
@@ -175,10 +179,62 @@ def seed():
             "persons": 2,
             "location_ref": "Box 12, West Tier",
             "venue_address": "Kensington Gore, London SW7 2AP, UK",
-            "status": "valid"
+            "status": "valid",
+            "owner_name": "Steve Rogers",
+            "claimed_by_uid": None
         }
     }
     db.reference('/tickets').set(tickets)
+
+    # 7. Mock Users Data
+    users = {
+        "admin_mock_uid": {
+            "name": "Admin User",
+            "email": "admin@venueflow.com",
+            "password": "password123",
+            "role": "admin"
+        },
+        "staff_mock_uid": {
+            "name": "Staff Guard",
+            "email": "staff_gate@venueflow.com",
+            "password": "password123",
+            "role": "staff",
+            "assigned_events": ["event_001"]
+        },
+        "tony_stark_uid": {
+            "name": "Tony Stark",
+            "email": "tony@stark.com",
+            "password": "password123",
+            "role": "attendee",
+            "claimed_tickets": ["IND-AUS-101"]
+        }
+    }
+    
+    # Clean up and seed Auth + DB
+    rtdb_users = {}
+    print("Creating mock Firebase Auth users...")
+    for uid, user_data in users.items():
+        try:
+            auth.create_user(
+                uid=uid,
+                email=user_data["email"],
+                password=user_data["password"],
+                display_name=user_data["name"]
+            )
+            print(f"  Created auth user: {user_data['email']}")
+        except auth.EmailAlreadyExistsError:
+            # Update password if it already exists to guarantee it works
+            auth.update_user(uid=uid, password=user_data["password"])
+            print(f"  Auth user existed, updated password: {user_data['email']}")
+        except Exception as e:
+            print(f"  Skipped auth creation for {user_data['email']}: {e}")
+
+        # Strip password before saving to RTDB
+        db_user = user_data.copy()
+        del db_user["password"]
+        rtdb_users[uid] = db_user
+
+    db.reference('/users').set(rtdb_users)
 
     db.reference('/active_event').set({"event_id": "event_001"})
     print("✅ Full Expansion Context Seeding complete.")
