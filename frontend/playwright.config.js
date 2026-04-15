@@ -17,7 +17,7 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: 1,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: 'html',
+  reporter: process.env.CI ? 'list' : 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
@@ -28,7 +28,10 @@ export default defineConfig({
     viewport: { width: 1280, height: 720 },
   },
 
-  /* Configure projects for major browsers */
+  /* Configure projects for major browsers.
+   * Mobile Safari (webkit) is excluded in CI due to system dependency
+   * issues on ubuntu-latest. It runs locally only.
+   */
   projects: [
     {
       name: 'chromium',
@@ -38,13 +41,15 @@ export default defineConfig({
       name: 'Mobile Chrome',
       use: { ...devices['Pixel 5'] },
     },
-    {
+    // Mobile Safari only runs locally (webkit is flaky on ubuntu-latest)
+    ...(!process.env.CI ? [{
       name: 'Mobile Safari',
       use: { ...devices['iPhone 12'] },
-    },
+    }] : []),
   ],
 
-  /* Run your local dev server before starting the tests */
+  /* The webServer block starts the Vite dev server automatically.
+   * The manual "npm run dev &" in ci.yml is not needed — Playwright handles it. */
   webServer: {
     command: 'npm run dev',
     url: 'http://localhost:5173',

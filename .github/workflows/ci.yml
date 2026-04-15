@@ -87,17 +87,16 @@ jobs:
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
       - name: Install dependencies
-        run: cd frontend && npm ci && npx playwright install --with-deps
+        run: cd frontend && npm ci && npx playwright install --with-deps chromium
       - name: Run frontend tests
         env:
+          CI: "true"
           VITE_MAPS_API_KEY: ${{ steps.secrets.outputs.VITE_MAPS_API_KEY }}
           VITE_FIREBASE_API_KEY: ${{ steps.secrets.outputs.VITE_FIREBASE_API_KEY }}
           VITE_FIREBASE_PROJECT_ID: ${{ steps.secrets.outputs.VITE_FIREBASE_PROJECT_ID }}
           VITE_FIREBASE_DATABASE_URL: ${{ steps.secrets.outputs.VITE_FIREBASE_DATABASE_URL }}
         run: |
           cd frontend
-          npm run dev &
-          npx wait-on http://localhost:5173
           npx playwright test
 
   deploy:
