@@ -105,7 +105,7 @@ test.describe('Staff Feature Workflows', () => {
     await expect(page.locator('h1')).toContainText('Staff Portal');
 
     // Mock API calls that StaffDashboard makes on load
-    await page.route('**/api/config**', async route => {
+    await page.route('**/api/venue/current**', async route => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
