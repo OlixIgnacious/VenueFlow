@@ -1,11 +1,93 @@
 import { test, expect } from '@playwright/test';
 
+/**
+ * Universal auth mocks dynamically returning role based on the email provided.
+ */
+async function setupAuthMocks(page) {
+  let currentRole = 'attendee';
+
+  await page.route('**/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword**', async route => {
+    const postData = JSON.parse(route.request().postData() || '{}');
+    const email = postData.email || 'test@example.com';
+    
+    if (email.includes('admin')) currentRole = 'admin';
+    else if (email.includes('staff')) currentRole = 'staff';
+    else currentRole = 'attendee';
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        idToken: 'fake-id-token',
+        email,
+        refreshToken: 'fake-refresh-token',
+        expiresIn: '3600',
+        localId: 'mock-uid',
+        registered: true
+      })
+    });
+  });
+
+  await page.route('**/securetoken.googleapis.com/v1/token**', async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        id_token: 'fake-id-token',
+        refresh_token: 'fake-refresh-token',
+        expires_in: '3600',
+        token_type: 'Bearer',
+        user_id: 'mock-uid',
+        project_id: 'mock-project'
+      })
+    });
+  });
+
+  await page.route('**/identitytoolkit.googleapis.com/v1/accounts:lookup**', async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        users: [{
+          localId: 'mock-uid',
+          email: 'test@example.com',
+          emailVerified: true,
+          createdAt: '1234567890',
+          lastLoginAt: '1234567890'
+        }]
+      })
+    });
+  });
+
+  await page.route('**/api/users/me', async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        uid: 'mock-uid',
+        email: 'test@example.com',
+        role: currentRole,
+        created_at: new Date().toISOString()
+      })
+    });
+  });
+
+  await page.route('**/api/events', async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([])
+    });
+  });
+}
+
 test.describe('VenueFlow Authentication & Routing Matrix', () => {
   
   test.beforeEach(async ({ page }) => {
     // Navigate to the app before each test
     page.on('console', msg => console.log(`BROWSER [${msg.type()}]: ${msg.text()}`));
     page.setDefaultTimeout(15000); // 15s
+    await setupAuthMocks(page);
     await page.goto('/');
   });
 
