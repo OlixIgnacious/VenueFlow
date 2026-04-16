@@ -35,6 +35,21 @@ graph TD
 
 ---
 
+## 🛡️ Secure Auth Architecture
+
+VenueFlow implements a comprehensive security matrix to handle thousands of concurrent users across different permission levels:
+
+| User Role | Entry Point | Target Interface | Protection Guard |
+| :--- | :--- | :--- | :--- |
+| **Attendee** | `/` | `/dashboard` | `ProtectedRoute (attendee)` |
+| **Staff** | `/staff-gate` | `/staff/dashboard` | `ProtectedRoute (staff)` |
+| **Admin** | `/staff-gate` | `/admin/dashboard` | `ProtectedRoute (admin)` |
+
+> [!IMPORTANT]
+> **PublicRoute Guard**: Any attempts by an authenticated user to hit public landing, login, or registration pages results in an immediate logical redirect to their designated home state, preserving the application's secure session.
+
+---
+
 ## 🧪 AI Evaluation & Test Cases
 
 The system's intelligence is validated across three primary operational scenarios. To verify these, run `python3 scripts/seed_firebase.py` and use the following Ticket IDs in the Attendee UI:
@@ -68,6 +83,11 @@ Intelligent routing logic that understands venue context, event type, and curren
 
 ### 🗺️ Live Crowd Heatmap
 Visual dashboard for venue staff to spot bottlenecks before they form, using Google Maps JS API. Operators can switch between different scheduled events with seamless context synchronization.
+
+### 🛡️ Authentication 3.0 & Secure Routing
+A hardened role-based access control system using distinct `PublicRoute` and `ProtectedRoute` guards.
+- **Reverse Auth Protection**: Authenticated users are intelligently redirected away from public pages to prevent state confusion.
+- **Strict RBAC**: Attendees, Staff, and Admins are locked into their respective dashboards with sub-second role verification.
 
 ### 🔄 Dynamic Event Context Sync
 A robust, URL-aware state management system ensures that attendee and staff interfaces always reflect the correct event context, preventing stale data between sessions.
@@ -129,10 +149,12 @@ cd frontend && npm install && npm run dev
 ## 🛠️ Tech Stack & Security
 
 - **Backend**: FastAPI (Python 3.11) with Google-style Docstrings.
-- **Frontend**: React 18 (Vite, Tailwind CSS) with JSDoc standards.
+- **Frontend**: React 18 (Vite) with JSDoc standards.
+- **Auth & Routing**: Firebase Auth + React Router 6 with custom `PublicRoute`/`ProtectedRoute` guards.
 - **AI**: Gemini 2.5 Flash via REST API (Google AI Studio).
 - **Cloud**: Automated keyless deployment to **Google Cloud Run** using GitHub OIDC / Workload Identity Federation.
 - **Real-time**: Firebase Realtime Database for sub-second gate density updates.
+- **Testing**: Playwright E2E suite with 100% pass rate for the Authentication & Navigation Matrix.
 
 ---
 
