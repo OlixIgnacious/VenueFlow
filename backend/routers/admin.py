@@ -10,6 +10,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from pydantic import BaseModel
 from backend.services.firebase_client import firebase_client
+from backend.services.gemini_client import gemini_client
 from backend.services.simulator import simulator
 from backend.config import settings
 
@@ -100,17 +101,6 @@ async def manual_tick(request: Request, admin_key: str = Depends(verify_admin_ke
 async def reset_ticket(request: Request, ticket_id: str, admin_key: str = Depends(verify_admin_key)):
     """
     Resets a ticket's status to 'valid' in Firebase.
-
-    Args:
-        request (Request): The incoming FastAPI request.
-        ticket_id (str): The unique ID of the ticket to reset.
-        admin_key (str): Validated admin key from dependency.
-
-    Returns:
-        dict: Confirmation message and ticket ID.
-
-    Raises:
-        HTTPException: 404 if the ticket_id does not exist.
     """
     ticket_data = firebase_client.get_ticket(ticket_id)
     if not ticket_data:
@@ -118,3 +108,55 @@ async def reset_ticket(request: Request, ticket_id: str, admin_key: str = Depend
     firebase_client.update_ticket_status(ticket_id, "valid")
     logger.info(f"[ADMIN] Ticket '{ticket_id}' reset to 'valid'")
     return {"message": f"Ticket {ticket_id} reset to valid", "ticket_id": ticket_id}
+
+
+@router.get("/dispatch-advice/{event_id}",
+    summary="AI Dispatcher Advice",
+    description="Consults Gemini 2.5 Flash to analyze current gate loads and staff presence to suggest optimal re-assignments.")
+async def get_dispatch_advice(event_id: str, admin_key: str = Depends(verify_admin_key)):
+    """
+    Analyzes crowd dynamics and staff distribution to provide relocation advice.
+    """
+    # 1. Gather Context
+    entry_points = firebase_client.get_entry_points(event_id)
+    presence_ref = firebase_client.db.reference(f'/staff_presence/{event_id}')
+    presence_data = presence_ref.get() or {}
+    
+    if not entry_points:
+        return {"recommendations": [], "analysis": "Insufficient data (no entry points)."}
+
+    # 2. Build AI Prompt
+    system_prompt = (
+        "You are the VenueFlow AI Command Controller. Your goal is to minimize wait times "
+        "by optimally distributing staff across venue gates. You will be provided with "
+        "gate loads and current staff positions. Suggest re-assignments only if there is a "
+        "clear imbalance (e.g., a 'high' load gate with 0-1 staff, while a 'low' gate has 2+)."
+    )
+    
+    gate_context = []
+    for eid, ep in entry_points.items():
+        staff_count = sum(1 for p in presence_data.values() if p.get('current_gate_id') == eid)
+        gate_context.append(f"- Gate {ep.get('label')}: {ep.get('status')} load, Status: {ep.get('status_label')}, Wait: {ep.get('wait_minutes')}m, Staff Count: {staff_count}")
+
+    staff_context = []
+    for uid, p in presence_data.items():
+        staff_context.append(f"- {p.get('name')} ({uid}): At {p.get('current_gate_id') or 'Unassigned'}, Status: {p.get('status')}")
+
+    user_msg = (
+        f"CONTEXT:\n"
+        f"Gates:\n{chr(10).join(gate_context)}\n"
+        f"Staff:\n{chr(10).join(staff_context)}\n\n"
+        "TASK: Provide optimal re-assignments. Return JSON list: "
+        "`[{'staff_uid': '...', 'staff_name': '...', 'target_gate_id': '...', 'reason': '...'}]`. "
+        "Limit to max 2 high-impact suggestions."
+    )
+
+    # 3. Call Gemini
+    advice = await gemini_client.generate_recommendation(system_prompt, user_msg)
+    
+    return {
+        "event_id": event_id,
+        "recommendations": advice if isinstance(advice, list) else [],
+        "timestamp": firebase_client.get_timestamp()
+    }
+
