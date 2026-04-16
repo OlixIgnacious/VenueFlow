@@ -64,6 +64,22 @@ def seed():
             "location_ref_label": "Camping Zone",
             "coordinates": {"lat": 33.6784, "lng": -116.2372},
             "entry_point_count": 12
+        },
+        "venue_005": {
+            "name": "Grand Convention Center",
+            "type": "convention_center",
+            "entry_label": "Plaza Entry",
+            "location_ref_label": "Hall / Booth",
+            "coordinates": {"lat": 37.7842, "lng": -122.4019},
+            "entry_point_count": 8
+        },
+        "venue_006": {
+            "name": "Starlight Theme Park",
+            "type": "theme_park",
+            "entry_label": "Turnstile",
+            "location_ref_label": "Land / Ride",
+            "coordinates": {"lat": 28.3852, "lng": -81.5639},
+            "entry_point_count": 15
         }
     }
     db.reference('/venues').set(venues)
@@ -91,6 +107,22 @@ def seed():
             "type": "festival",
             "venue_id": "venue_004",
             "venue_name": "Coachella Valley Fest",
+            "start_time": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat(),
+            "status": "live"
+        },
+        "event_005": {
+            "name": "Global Tech Expo 2026",
+            "type": "business_expo",
+            "venue_id": "venue_005",
+            "venue_name": "Grand Convention Center",
+            "start_time": (datetime.now(timezone.utc) + timedelta(hours=5)).isoformat(),
+            "status": "upcoming"
+        },
+        "event_006": {
+            "name": "New Year Countdown Splash",
+            "type": "holiday_celebration",
+            "venue_id": "venue_006",
+            "venue_name": "Starlight Theme Park",
             "start_time": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat(),
             "status": "live"
         }
@@ -147,6 +179,40 @@ def seed():
             "current_count": 1900 if is_bottleneck else 100
         }
     db.reference('/entry_points/event_004').set(entry_points_004)
+    
+    # 6. Entry Points for Venue 005 (Grand Convention Center)
+    entry_points_005 = {}
+    for i in range(8):
+        label = str(i + 1)
+        entry_points_005[f"entry_{label}"] = {
+            "label": f"Plaza Entry {label}",
+            "proximity_tags": [f"Hall {chr(65+i)}", f"Booth {100*(i+1)}"],
+            "coordinates": {"lat": 37.7840 + (i * 0.0002), "lng": -122.4015 + (i * 0.0002)},
+            "density": 0.3, 
+            "wait_minutes": 5,
+            "status": "low",
+            "capacity": 800,
+            "current_count": 240
+        }
+    db.reference('/entry_points/event_005').set(entry_points_005)
+
+    # 7. Entry Points for Venue 006 (Theme Park - MANY GATES)
+    entry_points_006 = {}
+    for i in range(15):
+        label = str(i + 1)
+        # Afternoon peak simulation
+        is_peak = i % 3 == 0
+        entry_points_006[f"gate_{label}"] = {
+            "label": f"Turnstile {label}",
+            "proximity_tags": [f"Land {chr(65+i)}", "Main Street"],
+            "coordinates": {"lat": 28.3850 + (i * 0.0003), "lng": -81.5630 + (i * 0.0003)},
+            "density": 0.88 if is_peak else 0.1,
+            "wait_minutes": 45 if is_peak else 2,
+            "status": "high" if is_peak else "low",
+            "capacity": 1500,
+            "current_count": 1320 if is_peak else 150
+        }
+    db.reference('/entry_points/event_006').set(entry_points_006)
 
     # 6. Global Sample Tickets
     tickets = {
@@ -182,6 +248,39 @@ def seed():
             "status": "valid",
             "owner_name": "Steve Rogers",
             "claimed_by_uid": None
+        },
+        "TECH-EXPO-2026": {
+            "event_id": "event_005",
+            "event_name": "Global Tech Expo 2026",
+            "date": "May 15, 2026",
+            "persons": 1,
+            "location_ref": "Hall C, Booth 402",
+            "venue_address": "747 Howard St, San Francisco, CA 94103",
+            "status": "valid",
+            "owner_name": "Peter Parker",
+            "claimed_by_uid": "peter_parker_uid"
+        },
+        "THEME-PARK-NYE": {
+            "event_id": "event_006",
+            "event_name": "New Year Countdown Splash",
+            "date": "Dec 31, 2025",
+            "persons": 4,
+            "location_ref": "Tomorrowland Entry",
+            "venue_address": "Lake Buena Vista, FL 32830",
+            "status": "valid",
+            "owner_name": "Peter Parker",
+            "claimed_by_uid": "peter_parker_uid"
+        },
+        "EXPIRED-STADIUM": {
+            "event_id": "event_001",
+            "event_name": "India vs Australia (Legacy)",
+            "date": "Jan 01, 2024",
+            "persons": 1,
+            "location_ref": "Block A",
+            "venue_address": "Bengalaru",
+            "status": "expired",
+            "owner_name": "Tony Stark",
+            "claimed_by_uid": "tony_stark_uid"
         }
     }
     db.reference('/tickets').set(tickets)
@@ -206,7 +305,21 @@ def seed():
             "email": "tony@stark.com",
             "password": "password123",
             "role": "attendee",
-            "claimed_tickets": ["IND-AUS-101"]
+            "claimed_tickets": ["IND-AUS-101", "EXPIRED-STADIUM"]
+        },
+        "staff_two_uid": {
+            "name": "Staff Mary",
+            "email": "staff_two@venueflow.com",
+            "password": "password123",
+            "role": "staff",
+            "assigned_events": ["event_006", "event_005"]
+        },
+        "peter_parker_uid": {
+            "name": "Peter Parker",
+            "email": "peter@parker.com",
+            "password": "password123",
+            "role": "attendee",
+            "claimed_tickets": ["TECH-EXPO-2026", "THEME-PARK-NYE"]
         }
     }
     
