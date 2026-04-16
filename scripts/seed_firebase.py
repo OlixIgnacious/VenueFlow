@@ -349,6 +349,46 @@ def seed():
 
     db.reference('/users').set(rtdb_users)
 
+    # 8. Command & Control: Staff Presence
+    # Initialize initial presence for active staff
+    presence = {
+        "event_001": {
+            "staff_mock_uid": {
+                "name": "Staff Guardhub",
+                "current_gate_id": "entry_A",
+                "status": "active",
+                "last_reported": datetime.now(timezone.utc).isoformat()
+            }
+        },
+        "event_006": {
+            "staff_two_uid": {
+                "name": "Staff Mary",
+                "current_gate_id": None,
+                "status": "inactive",
+                "last_reported": (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
+            }
+        }
+    }
+    db.reference('/staff_presence').set(presence)
+
+    # 9. Initial Notifications (Logs)
+    notifications = {
+        "staff_two_uid": {
+            "notif_001": {
+                "message": "Welcome to the New Year shift. Report to your assigned gate.",
+                "target_gate_id": "gate_1",
+                "sender_name": "System",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "status": "unread",
+                "acknowledged_at": None
+            }
+        }
+    }
+    db.reference('/staff_notifications').set(notifications)
+
+    # 10. Emergency Alerts (Empty initially)
+    db.reference('/emergency_alerts').set({})
+
     db.reference('/active_event').set({"event_id": "event_001"})
     print("✅ Full Expansion Context Seeding complete.")
 
