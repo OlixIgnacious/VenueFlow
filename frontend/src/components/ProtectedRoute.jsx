@@ -28,8 +28,10 @@ export default function ProtectedRoute({ children, allowedRoles }) {
   }
 
   if (allowedRoles && !allowedRoles.includes(userProfile.role)) {
-    // Role not authorized, bounce them back
-    return <Navigate to="/" state={{ error: 'Access Denied: You do not have permission to view this dashboard.' }} replace />;
+    // Role not authorized, bounce them back to their respective dashboard
+    const redirectPath = userProfile.role === 'admin' ? '/admin/dashboard' : 
+                        (userProfile.role === 'staff' ? '/staff/dashboard' : '/dashboard');
+    return <Navigate to={redirectPath} state={{ error: 'Access Denied: You do not have permission to view this dashboard.' }} replace />;
   }
 
   return children;

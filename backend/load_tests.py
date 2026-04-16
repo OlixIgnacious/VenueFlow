@@ -37,4 +37,4 @@ class VenueFlowLoadTest(HttpUser):
     @task(2)
     def test_events_list(self):
         # Public events list check
-        self.client.get("/api/events")
+        self.client.get("/api/events/list")

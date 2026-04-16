@@ -1,13 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import { Calendar, LogOut, AlertCircle } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Calendar, LogOut, AlertCircle, X, Shield } from 'lucide-react';
 
 export default function StaffEventsDashboard() {
   const { userProfile, logout } = useAuth();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
+  const [toast, setToast] = useState(null);
+
+  useEffect(() => {
+    if (location.state?.error || location.state?.message) {
+      setToast(location.state.error || location.state.message);
+      // clear state to prevent toast on refresh
+      window.history.replaceState({}, document.title);
+      const timer = setTimeout(() => setToast(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [location]);
 
   useEffect(() => {
     fetchEvents();
@@ -31,7 +43,23 @@ export default function StaffEventsDashboard() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6 pt-12">
+    <div className="min-h-screen bg-slate-950 text-slate-100">
+      {/* Toast Notification */}
+      {toast && (
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="bg-slate-900/90 backdrop-blur-xl border border-blue-500/20 px-6 py-4 rounded-3xl shadow-2xl flex items-center space-x-4">
+            <div className="w-10 h-10 rounded-full bg-blue-600/20 flex items-center justify-center text-blue-400">
+              <Shield size={20} />
+            </div>
+            <p className="text-sm font-bold text-slate-100 pr-4">{toast}</p>
+            <button aria-label="Close Notification" onClick={() => setToast(null)} className="text-slate-500 hover:text-white transition-colors focus:outline-none">
+              <X size={18} aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="max-w-4xl mx-auto p-6 pt-12">
       <div className="flex justify-between items-center mb-10 border-b border-slate-800 pb-6">
         <div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
@@ -83,6 +111,7 @@ export default function StaffEventsDashboard() {
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 }

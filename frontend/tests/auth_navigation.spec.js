@@ -135,8 +135,8 @@ test.describe('VenueFlow Authentication & Routing Matrix', () => {
     // 2. Try to manually navigate to Admin URL
     await page.goto('/admin/dashboard');
 
-    // 3. Should bounce back to landing page with Access Denied toast
-    await expect(page).toHaveURL('/');
+    // 3. Should bounce back to their dashboard with Access Denied toast
+    await expect(page).toHaveURL('/dashboard');
     // Target the entire toast container using a robust locator
     const toast = page.locator('div.fixed').filter({ hasText: 'Access Denied' });
     await expect(toast).toBeVisible();
@@ -169,5 +169,52 @@ test.describe('VenueFlow Authentication & Routing Matrix', () => {
     await expect(errorMsg).toBeVisible();
     await expect(errorMsg).toContainText('Password must be at least 8 characters');
     await expect(page).toHaveURL(/\/register/);
+  });
+
+  test.describe('Authenticated Redirection (PublicRoute)', () => {
+    test('Attendee should be redirected from landing page to /dashboard', async ({ page }) => {
+      // 1. Mock logged in attendee
+      await page.goto('/login');
+      await page.fill('input[type="email"]', 'tony@stark.com');
+      await page.fill('input[type="password"]', 'password123');
+      await page.click('button[type="submit"]');
+      await expect(page).toHaveURL('/dashboard');
+
+      // 2. Try to go to landing page
+      await page.goto('/');
+      
+      // 3. Should be bounced back to dashboard
+      await expect(page).toHaveURL('/dashboard');
+    });
+
+    test('Staff should be redirected from login page to /staff/dashboard', async ({ page }) => {
+      // 1. Mock logged in staff
+      await page.goto('/login');
+      await page.fill('input[type="email"]', 'staff_gate@venueflow.com');
+      await page.fill('input[type="password"]', 'password123');
+      await page.click('button[type="submit"]');
+      await expect(page).toHaveURL('/staff/dashboard');
+
+      // 2. Try to go to /login again
+      await page.goto('/login');
+      
+      // 3. Should be bounced to staff dashboard
+      await expect(page).toHaveURL('/staff/dashboard');
+    });
+
+    test('Admin should be redirected from staff login to /admin/dashboard', async ({ page }) => {
+      // 1. Mock logged in admin
+      await page.goto('/login');
+      await page.fill('input[type="email"]', 'admin@venueflow.com');
+      await page.fill('input[type="password"]', 'password123');
+      await page.click('button[type="submit"]');
+      await expect(page).toHaveURL('/admin/dashboard');
+
+      // 2. Try to go to /staff/login
+      await page.goto('/staff/login');
+      
+      // 3. Should be bounced to admin dashboard
+      await expect(page).toHaveURL('/admin/dashboard');
+    });
   });
 });

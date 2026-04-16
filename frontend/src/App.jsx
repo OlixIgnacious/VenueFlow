@@ -28,6 +28,7 @@ const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
  */
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import PublicRoute from './components/PublicRoute';
 import AuthLogin from './pages/AuthLogin';
 import AuthRegister from './pages/AuthRegister';
 
@@ -45,13 +46,13 @@ function App() {
               }>
                 <Routes>
                   {/* Public Landing & Attendee Auth */}
-                  <Route path="/" element={<EventDiscovery />} />
-                  <Route path="/login" element={<AuthLogin roleTitle="Attendee" role="attendee" registerPath="/register" />} />
-                  <Route path="/register" element={<AuthRegister roleTitle="Attendee" role="attendee" loginPath="/login" />} />
+                  <Route path="/" element={<PublicRoute><EventDiscovery /></PublicRoute>} />
+                  <Route path="/login" element={<PublicRoute><AuthLogin roleTitle="Attendee" role="attendee" registerPath="/register" /></PublicRoute>} />
+                  <Route path="/register" element={<PublicRoute><AuthRegister roleTitle="Attendee" role="attendee" loginPath="/login" /></PublicRoute>} />
 
                   {/* Staff Auth */}
-                  <Route path="/staff/login" element={<AuthLogin roleTitle="Staff" role="staff" registerPath="/staff/register" />} />
-                  <Route path="/staff/register" element={<AuthRegister roleTitle="Staff" role="staff" loginPath="/staff/login" />} />
+                  <Route path="/staff/login" element={<PublicRoute><AuthLogin roleTitle="Staff" role="staff" registerPath="/staff/register" /></PublicRoute>} />
+                  <Route path="/staff/register" element={<PublicRoute><AuthRegister roleTitle="Staff" role="staff" loginPath="/staff/login" /></PublicRoute>} />
 
                   {/* Protected Attendee Routes */}
                   <Route path="/dashboard" element={
