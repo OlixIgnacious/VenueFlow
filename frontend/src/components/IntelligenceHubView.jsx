@@ -123,12 +123,16 @@ export default function IntelligenceHubView({ eventId, venue, initialTab = 'list
     <div className="space-y-8 animate-in fade-in duration-500">
       
       {/* Tactical Overview Panels */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all hover:shadow-md border-l-4 border-l-blue-500">
+      <div 
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+        role="region" 
+        aria-label="Tactical metrics overview"
+      >
+        <div className="p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all hover:shadow-md border-l-4 border-l-blue-500" role="status" aria-live="polite">
           <p className="text-slate-500 dark:text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Station Volume</p>
           <p className="text-4xl font-black text-slate-900 dark:text-white">{Object.keys(entryPoints).length}</p>
         </div>
-        <div className="p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all hover:shadow-md border-l-4 border-l-indigo-500">
+        <div className="p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all hover:shadow-md border-l-4 border-l-indigo-500" role="status" aria-live="polite">
           <p className="text-slate-500 dark:text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Average Wait</p>
           <p className="text-4xl font-black text-slate-900 dark:text-white">
             {Object.keys(entryPoints).length > 0 
@@ -137,28 +141,31 @@ export default function IntelligenceHubView({ eventId, venue, initialTab = 'list
             }
           </p>
         </div>
-        <div className="p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all hover:shadow-md border-l-4 border-l-emerald-500">
+        <div className="p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all hover:shadow-md border-l-4 border-l-emerald-500" role="status" aria-live="polite">
           <p className="text-slate-500 dark:text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Staff Online</p>
           <div className="flex items-baseline space-x-1">
             <p className="text-4xl font-black text-emerald-600 dark:text-emerald-500">
               {Object.values(allStaffPresence).filter(p => p.status === 'active').length}
             </p>
-            <p className="text-slate-400 text-sm font-bold opacity-30">/ {Object.keys(allStaffPresence).length || '?'}</p>
+            <p className="text-slate-400 text-sm font-bold opacity-30" aria-label={`out of ${Object.keys(allStaffPresence).length || 'unknown'} total staff`}>/ {Object.keys(allStaffPresence).length || '?'}</p>
           </div>
         </div>
-        <div className="p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all hover:shadow-md border-l-4 border-l-rose-500">
+        <div className="p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all hover:shadow-md border-l-4 border-l-rose-500" role="status" aria-live="assertive">
           <p className="text-slate-500 dark:text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Live Incidents</p>
           <div className="flex items-center space-x-2">
             <p className={`text-4xl font-black ${allIncidents.length > 0 ? 'text-rose-500' : 'text-slate-300'}`}>
               {allIncidents.length}
             </p>
-            {allIncidents.length > 0 && <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />}
+            {allIncidents.length > 0 && <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" aria-hidden="true" />}
           </div>
         </div>
       </div>
 
       {/* Sub-navigation Tabs */}
-      <div className="flex bg-slate-100 dark:bg-slate-900/50 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 w-fit">
+      <nav 
+        className="flex bg-slate-100 dark:bg-slate-900/50 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 w-fit"
+        aria-label="Dashboard views"
+      >
         {[
           { id: 'list', label: 'Matrix', icon: LayoutDashboard },
           { id: 'map', label: 'Heatmap', icon: MapIcon },
@@ -171,19 +178,22 @@ export default function IntelligenceHubView({ eventId, venue, initialTab = 'list
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
+            aria-selected={activeTab === tab.id}
+            role="tab"
+            aria-controls={`${tab.id}-panel`}
             className={`flex items-center space-x-2 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
               activeTab === tab.id ? 'bg-white dark:bg-slate-800 text-blue-600 shadow-sm' : 'text-slate-500 hover:text-blue-500'
             }`}
           >
-            <tab.icon size={14} />
+            <tab.icon size={14} aria-hidden="true" />
             <span>{tab.label}</span>
           </button>
         ))}
-      </div>
+      </nav>
 
       {activeTab === 'list' && (
-        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
-           <table className="w-full text-left">
+        <div id="list-panel" role="tabpanel" className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+           <table className="w-full text-left" aria-label="Entry Point Matrix">
              <thead className="bg-slate-50 dark:bg-slate-950/50 border-b border-slate-100 dark:border-slate-800">
                <tr>
                  <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Site Terminal</th>
@@ -203,7 +213,7 @@ export default function IntelligenceHubView({ eventId, venue, initialTab = 'list
       )}
 
       {activeTab === 'map' && (
-        <div className="h-[600px] bg-slate-900 rounded-3xl border border-slate-800 overflow-hidden relative shadow-2xl animate-in fade-in zoom-in-95 duration-500">
+        <div id="map-panel" role="tabpanel" className="h-[600px] bg-slate-900 rounded-3xl border border-slate-800 overflow-hidden relative shadow-2xl animate-in fade-in zoom-in-95 duration-500">
            <VenueMap 
              venue={venue}
              entryPoints={Object.entries(entryPoints).map(([id, ep]) => ({ ...ep, id }))} 
@@ -213,7 +223,7 @@ export default function IntelligenceHubView({ eventId, venue, initialTab = 'list
       )}
 
       {activeTab === 'incidents' && (
-        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div id="incidents-panel" role="tabpanel" className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
            {allIncidents.length === 0 ? (
              <div className="py-24 text-center border border-dashed border-slate-800 rounded-3xl">
                 <p className="text-slate-500 italic">No tactical incidents logged.</p>
@@ -222,7 +232,7 @@ export default function IntelligenceHubView({ eventId, venue, initialTab = 'list
              allIncidents.map(incident => (
                <div key={incident.id} className="bg-slate-900 border border-slate-800 p-6 rounded-3xl flex justify-between items-center group hover:border-blue-500/30 transition-all shadow-xl">
                   <div className="flex items-center space-x-6">
-                     <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg ${incident.severity === 'alpha' ? 'bg-rose-500/20 text-rose-500' : 'bg-amber-500/20 text-amber-500'}`}>{incident.severity === 'alpha' ? '!' : '?'}</div>
+                     <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg ${incident.severity === 'alpha' ? 'bg-rose-500/20 text-rose-500' : 'bg-amber-500/20 text-amber-500'}`} aria-label={incident.severity === 'alpha' ? 'Critical Severity' : 'Warning Severity'}>{incident.severity === 'alpha' ? '!' : '?'}</div>
                      <div><h4 className="font-bold text-white text-lg uppercase italic tracking-tighter">{incident.type.replace('_', ' ')}</h4><p className="text-slate-400 text-sm mt-1">{incident.description}</p><div className="flex items-center space-x-4 mt-3"><span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{new Date(incident.timestamp).toLocaleString()}</span><span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Reporter: {incident.staff_name || incident.reporter_name || 'Staff Member'}</span></div></div>
                   </div>
                </div>
@@ -232,7 +242,7 @@ export default function IntelligenceHubView({ eventId, venue, initialTab = 'list
       )}
 
       {activeTab === 'personnel' && userProfile?.role === 'admin' && (
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div id="personnel-panel" role="tabpanel" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
           <AdminPersonnelMatrix 
             personnel={livePersonnel} 
             entryPoints={entryPoints} 
@@ -242,18 +252,25 @@ export default function IntelligenceHubView({ eventId, venue, initialTab = 'list
       )}
 
       {activeTab === 'ai' && userProfile?.role === 'admin' && (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-           <div className="bg-gradient-to-br from-indigo-900/40 to-slate-900 border border-indigo-500/30 rounded-3xl p-8 shadow-2xl relative overflow-hidden group">
+        <div id="ai-panel" role="tabpanel" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+           <div className="bg-gradient-to-br from-indigo-900/40 to-slate-900 border border-indigo-500/30 rounded-3xl p-8 shadow-2xl relative overflow-hidden group" role="region" aria-label="AI Tactical Recommendations">
               <div className="relative z-10">
                  <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center space-x-3">
-                       <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg"><Brain className="text-white" size={20} /></div>
+                       <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg"><Brain className="text-white" size={20} aria-hidden="true" /></div>
                        <div><h4 className="text-xl font-black text-white tracking-tight italic uppercase">Tactical Advisory</h4><p className="text-indigo-400 text-[10px] font-bold uppercase tracking-widest">Powered by Gemini 2.5 Flash</p></div>
                     </div>
-                    <button onClick={fetchAIAdvice} className="bg-indigo-500/20 hover:bg-indigo-500/40 text-indigo-400 px-6 py-2 rounded-xl text-xs font-bold transition-all border border-indigo-500/20 flex items-center space-x-2"><RefreshCw size={14} className={isAiLoading ? 'animate-spin' : ''} /><span>RESCAN SYSTEM PULSE</span></button>
+                    <button 
+                      onClick={fetchAIAdvice} 
+                      aria-label="Refresh AI Advice"
+                      className="bg-indigo-500/20 hover:bg-indigo-500/40 text-indigo-400 px-6 py-2 rounded-xl text-xs font-bold transition-all border border-indigo-500/20 flex items-center space-x-2"
+                    >
+                      <RefreshCw size={14} className={isAiLoading ? 'animate-spin' : ''} aria-hidden="true" />
+                      <span>RESCAN SYSTEM PULSE</span>
+                    </button>
                  </div>
                  {isAiLoading ? (
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">{[1,2].map(i => <div key={i} className="h-32 bg-slate-800/50 rounded-2xl animate-pulse" />)}</div>
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4" aria-busy="true" aria-label="Loading AI Recommendations">{[1,2].map(i => <div key={i} className="h-32 bg-slate-800/50 rounded-2xl animate-pulse" />)}</div>
                  ) : aiRecommendations.length === 0 ? (
                    <p className="text-center py-8 text-indigo-300/40 italic text-sm">Optimal staff distribution detected.</p>
                  ) : (
@@ -275,13 +292,27 @@ export default function IntelligenceHubView({ eventId, venue, initialTab = 'list
 
       {/* Dispatch Modal */}
       {isDispatchModalOpen && (
-        <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+        <div 
+          className="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-[100] flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="dispatch-modal-title"
+        >
            <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-3xl p-8 shadow-2xl animate-in zoom-in-95 duration-200">
-              <h3 className="text-2xl font-black mb-2 uppercase italic tracking-tighter">Tactical Redirect</h3>
+              <h3 id="dispatch-modal-title" className="text-2xl font-black mb-2 uppercase italic tracking-tighter">Tactical Redirect</h3>
               <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-8">Deploying <span className="text-white">{livePersonnel.find(p => p.uid === isDispatchModalOpen)?.name}</span></p>
-              <div className="space-y-3 mb-8 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+              <div 
+                className="space-y-3 mb-8 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar"
+                role="group"
+                aria-label="Select target gate"
+              >
                  {Object.entries(entryPoints).map(([id, ep]) => (
-                   <button key={id} onClick={() => setSelectedGateForDispatch(id)} className={`w-full text-left p-4 rounded-2xl border transition-all flex justify-between items-center group ${selectedGateForDispatch === id ? 'bg-blue-600 border-blue-500 text-white shadow-xl' : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'}`}>
+                   <button 
+                     key={id} 
+                     onClick={() => setSelectedGateForDispatch(id)} 
+                     aria-pressed={selectedGateForDispatch === id}
+                     className={`w-full text-left p-4 rounded-2xl border transition-all flex justify-between items-center group ${selectedGateForDispatch === id ? 'bg-blue-600 border-blue-500 text-white shadow-xl' : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'}`}
+                   >
                       <div className="flex flex-col"><span className="font-bold text-sm uppercase italic">{ep.label}</span><span className="text-[10px] opacity-50 uppercase font-black">Station ID: {id}</span></div>
                       <div className={`text-[10px] font-black uppercase ${ep.status === 'high' ? 'text-rose-400' : 'text-slate-500'}`}>{ep.status} Load</div>
                    </button>
@@ -289,7 +320,13 @@ export default function IntelligenceHubView({ eventId, venue, initialTab = 'list
               </div>
               <div className="flex gap-4">
                  <button onClick={() => { setIsDispatchModalOpen(null); setSelectedGateForDispatch(null); }} className="flex-1 bg-slate-850 hover:bg-slate-800 text-slate-400 py-4 rounded-2xl font-bold transition-all border border-slate-800 uppercase text-[10px] tracking-widest">ABORT</button>
-                 <button disabled={!selectedGateForDispatch} onClick={() => handleDispatch(isDispatchModalOpen, selectedGateForDispatch)} className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-4 rounded-2xl font-black text-[10px] tracking-[0.2em] shadow-xl shadow-blue-900/40 transition-all active:scale-95">CONFIRM DISPATCH</button>
+                 <button 
+                   disabled={!selectedGateForDispatch} 
+                   onClick={() => handleDispatch(isDispatchModalOpen, selectedGateForDispatch)} 
+                   className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-4 rounded-2xl font-black text-[10px] tracking-[0.2em] shadow-xl shadow-blue-900/40 transition-all active:scale-95"
+                 >
+                   CONFIRM DISPATCH
+                 </button>
               </div>
            </div>
         </div>
@@ -297,9 +334,13 @@ export default function IntelligenceHubView({ eventId, venue, initialTab = 'list
 
       {/* Toast System */}
       {toast && (
-        <div className="fixed bottom-8 right-8 z-[201] animate-in slide-in-from-right-10 duration-500">
+        <div 
+          className="fixed bottom-8 right-8 z-[201] animate-in slide-in-from-right-10 duration-500"
+          role="alert"
+          aria-live="assertive"
+        >
            <div className={`px-8 py-4 rounded-2xl shadow-2xl border flex items-center space-x-4 backdrop-blur-xl ${toast.type === 'success' ? 'bg-emerald-500/90 border-emerald-400 text-white' : 'bg-rose-500/90 border-rose-400 text-white'}`}>
-              <Shield size={18} className="text-white" />
+              <Shield size={18} className="text-white" aria-hidden="true" />
               <p className="font-black text-[11px] uppercase tracking-widest tracking-tight">{toast.message}</p>
            </div>
         </div>

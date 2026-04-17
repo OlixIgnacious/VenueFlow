@@ -14,18 +14,17 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
     Returns the parsed user dictionary {uid, email, ...}.
     """
     token = credentials.credentials
-    
-    # E2E Testing Bypass: Support role-specific fake tokens.
-    if token.startswith("fake-id-token"):
-        role = "attendee"
-        if "admin" in token: role = "admin"
-        elif "staff" in token: role = "staff"
-        
+    from backend.config import settings
+    # E2E Testing Bypass: Support role-specific fake tokens ONLY in testing mode.
+    # This prevents the 40-minute 'ghosting' hangs in CI.
+    if settings.TESTING and token.startswith("fake-id-token"):
+        role = token.split("-")[-1]  # fake-id-token-admin -> admin
         return {
-            "uid": f"mock-uid-{role}", 
-            "email": f"{role}@test.com", 
+            "uid": f"test_{role}_uid",
+            "email": f"{role}@test.com",
+            "name": f"Test {role.capitalize()}",
             "role": role,
-            "name": f"Mock {role.capitalize()}"
+            "picture": "https://api.dicebear.com/7.x/avataaars/svg?seed=test"
         }
 
     try:

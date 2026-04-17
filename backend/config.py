@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     FIREBASE_SERVICE_CREDENTIALS: str = ""
     ALLOWED_ORIGIN: str = "http://localhost:5173"
     ADMIN_API_KEY: str = ""
+    TESTING: bool = False
 
     @property
     def firebase_creds_dict(self):
