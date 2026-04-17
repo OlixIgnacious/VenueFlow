@@ -188,8 +188,9 @@ export default function IntelligenceHubView({ eventId, venue, initialTab = 'list
                <tr>
                  <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Site Terminal</th>
                  <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Operational Status</th>
-                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Volume Density</th>
                  <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Wait Pulse</th>
+                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Wait Status</th>
+                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Occupancy</th>
                </tr>
              </thead>
              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -203,7 +204,11 @@ export default function IntelligenceHubView({ eventId, venue, initialTab = 'list
 
       {activeTab === 'map' && (
         <div className="h-[600px] bg-slate-900 rounded-3xl border border-slate-800 overflow-hidden relative shadow-2xl animate-in fade-in zoom-in-95 duration-500">
-           <VenueMap entryPoints={entryPoints} heatmapEnabled={true} />
+           <VenueMap 
+             venue={venue}
+             entryPoints={Object.entries(entryPoints).map(([id, ep]) => ({ ...ep, id }))} 
+             showHeatmap={true} 
+           />
         </div>
       )}
 
@@ -218,7 +223,7 @@ export default function IntelligenceHubView({ eventId, venue, initialTab = 'list
                <div key={incident.id} className="bg-slate-900 border border-slate-800 p-6 rounded-3xl flex justify-between items-center group hover:border-blue-500/30 transition-all shadow-xl">
                   <div className="flex items-center space-x-6">
                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg ${incident.severity === 'alpha' ? 'bg-rose-500/20 text-rose-500' : 'bg-amber-500/20 text-amber-500'}`}>{incident.severity === 'alpha' ? '!' : '?'}</div>
-                     <div><h4 className="font-bold text-white text-lg uppercase italic tracking-tighter">{incident.type.replace('_', ' ')}</h4><p className="text-slate-400 text-sm mt-1">{incident.description}</p><div className="flex items-center space-x-4 mt-3"><span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{new Date(incident.timestamp).toLocaleString()}</span><span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Reporter: {incident.reporter_name}</span></div></div>
+                     <div><h4 className="font-bold text-white text-lg uppercase italic tracking-tighter">{incident.type.replace('_', ' ')}</h4><p className="text-slate-400 text-sm mt-1">{incident.description}</p><div className="flex items-center space-x-4 mt-3"><span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{new Date(incident.timestamp).toLocaleString()}</span><span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Reporter: {incident.staff_name || incident.reporter_name || 'Staff Member'}</span></div></div>
                   </div>
                </div>
              ))

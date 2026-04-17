@@ -38,6 +38,10 @@ Thumbs.db
 .Trashes
 
 # --- Testing & Reports ---
+.coverage
+htmlcov/
+coverage.xml
+nosetests.xml
 playwright-report/
 frontend/playwright-report/
 test-results/
@@ -46,6 +50,8 @@ automated_test_report.md
 temp_*.spec.js
 judgement.md
 thingstodo.md
+failure_log.txt
+backend/tests/failure_log.txt
 
 # --- Credentials & Security ---
 *-firebase-adminsdk-*.json

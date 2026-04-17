@@ -150,17 +150,24 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {activeTab === 'intelligence' && selectedEventId && (
-            <IntelligenceHubView eventId={selectedEventId} venue={null} initialTab="list" />
-          )}
+          {(() => {
+            const activeEvent = events.find(e => e.id === selectedEventId);
+            return (
+              <>
+                {activeTab === 'intelligence' && selectedEventId && (
+                  <IntelligenceHubView eventId={selectedEventId} venue={activeEvent} initialTab="list" />
+                )}
 
-          {activeTab === 'personnel' && selectedEventId && (
-            <IntelligenceHubView eventId={selectedEventId} venue={null} initialTab="personnel" />
-          )}
+                {activeTab === 'personnel' && selectedEventId && (
+                  <IntelligenceHubView eventId={selectedEventId} venue={activeEvent} initialTab="personnel" />
+                )}
 
-          {activeTab === 'incidents' && selectedEventId && (
-            <IntelligenceHubView eventId={selectedEventId} venue={null} initialTab="incidents" />
-          )}
+                {activeTab === 'incidents' && selectedEventId && (
+                  <IntelligenceHubView eventId={selectedEventId} venue={activeEvent} initialTab="incidents" />
+                )}
+              </>
+            );
+          })()}
         </section>
       </main>
     </div>
