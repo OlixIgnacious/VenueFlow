@@ -1,135 +1,67 @@
 import { test, expect } from '@playwright/test';
+import { setupAuthMocks, performLogin } from './test_helpers';
 
-/**
- * Helper: sets up all Firebase auth mocks needed for a clean login.
- * Firebase SDK calls several endpoints after signInWithPassword:
- *   1. accounts:signInWithPassword  → returns idToken + refreshToken
- *   2. token endpoint (securetoken)  → returns refreshed token
- *   3. accounts:lookup (getAccountInfo) → returns user profile
- */
-async function setupAuthMocks(page, role = 'staff', uid = 'mock-uid') {
-  const email = 'staff_gate@venueflow.com';
-
-  // Firebase: signInWithPassword
-  await page.route('**/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword**', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        idToken: 'fake-id-token',
-        email,
-        refreshToken: 'fake-refresh-token',
-        expiresIn: '3600',
-        localId: uid,
-        registered: true
-      })
-    });
-  });
-
-  // Firebase: token refresh (securetoken.googleapis.com)
-  await page.route('**/securetoken.googleapis.com/v1/token**', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        id_token: 'fake-id-token',
-        refresh_token: 'fake-refresh-token',
-        expires_in: '3600',
-        token_type: 'Bearer',
-        user_id: uid,
-        project_id: 'mock-project'
-      })
-    });
-  });
-
-  // Firebase: getAccountInfo / lookup (validates the token)
-  await page.route('**/identitytoolkit.googleapis.com/v1/accounts:lookup**', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        users: [{
-          localId: uid,
-          email,
-          emailVerified: true,
-          displayName: 'John Staff',
-          providerUserInfo: [],
-          validSince: String(Math.floor(Date.now() / 1000) - 3600),
-          lastLoginAt: String(Date.now()),
-          createdAt: String(Date.now() - 86400000)
-        }]
-      })
-    });
-  });
-
-  // Backend: profile endpoint — AuthContext calls /api/users/me after login
-  await page.route('**/api/users/me', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ uid, role: 'staff', name: 'John Staff' })
-    });
-  });
-}
-
-test.describe('Staff Feature Workflows', () => {
+test.describe('Staff Feature Workflows (Integrated)', () => {
   test.beforeEach(async ({ page }) => {
-    await setupAuthMocks(page, 'staff', 'mock-staff');
-
-    // Mock the Events List — what StaffEventsDashboard fetches
-    await page.route('**/api/users/me/events', async route => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify([{
-          id: 'mock-event-123',
-          name: 'Hackathon Grand Finale',
-          venue_name: 'Main Stage',
-          status: 'live',
-          start_time: new Date().toISOString()
-        }])
-      });
-    });
-
-    // Login via the UI form
-    await page.goto('/login');
-    await page.fill('#email', 'staff_gate@venueflow.com');
-    await page.fill('#password', 'password123');
-    await page.click('button[type="submit"]');
-    await page.waitForURL('**/staff/dashboard', { timeout: 15000 });
+    // 1. Setup Auth and Basic Dashboard data
+    await setupAuthMocks(page, { role: 'staff', uid: 'staff_1', email: 'staff_1@venueflow.com' });
+    
+    // 2. Perform UI Login
+    await performLogin(page, 'staff_1@venueflow.com', 'password123', '/staff/dashboard');
   });
 
-  test('Should display event list and navigate to the Live Crowd Intelligence dashboard', async ({ page }) => {
-    // Verify the staff events dashboard loaded with the mocked event card
-    await expect(page.locator('text=Hackathon Grand Finale')).toBeVisible({ timeout: 5000 });
-    await expect(page.locator('h1')).toContainText('Staff Portal');
+  test('Staff Dashboard Navigation', async ({ page }) => {
+    // Verify staff event list loads events from real backend
+    await expect(page.locator('text=Staff Portal')).toBeVisible({ timeout: 10000 });
+    
+    // Choose the first event (e.g., event_001 from seeding)
+    const eventCard = page.locator('div').filter({ has: page.getByRole('heading', { name: 'India vs Australia — T20' }) }).first();
+    await expect(eventCard).toBeVisible();
+    
+    // Click "Launch Dashboard →"
+    await eventCard.getByText('Launch Dashboard →').first().click();
 
-    // Mock API calls that StaffDashboard makes on load
-    await page.route('**/api/venue/current**', async route => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          event: { id: 'mock-event-123', name: 'Hackathon Grand Finale' },
-          venue: { name: 'Test Arena', entries: {} }
-        })
-      });
-    });
-    await page.route('**/api/events/list**', async route => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          'mock-event-123': { id: 'mock-event-123', name: 'Hackathon Grand Finale' }
-        })
-      });
-    });
+    // Verify detailed dashboard loads
+    await expect(page.getByRole('heading', { name: 'Intelligence Hub' })).toBeVisible({ timeout: 15000 });
+  });
 
-    // Navigate directly to the staff gate control for the event
-    await page.goto('/staff/event/mock-event-123');
-    await expect(page).toHaveURL(/.*\/staff\/event\/mock-event-123/);
+  test('Tactical Operations: Station Check-in & Emergency Signal', async ({ page }) => {
+    // Navigate to a specific event hub
+    await page.goto('/staff/event/event_001');
+    await expect(page.locator('h2')).toContainText('Intelligence Hub');
 
-    // Verify the Crowd Intelligence dashboard header is rendered
-    await expect(page.locator('h2')).toContainText('Crowd Intelligence');
+    // Perform Check-in using the station selector
+    // Use first() to avoid strict mode violation
+    const selector = page.locator('select').first();
+    await selector.selectOption({ label: 'Gate B' });
+
+    // Verify presence status updates - check the badge in the header or the occupancy row
+    await expect(page.locator('text=ACTIVE AT GATE B')).toBeVisible({ timeout: 5000 });
+
+    // Trigger Emergency
+    await page.click('button:has-text("NEED BACKUP")');
+    
+    // Verify toast notification (browser native alert is mocked by Playwright if we don't handle it, 
+    // but the app also shows UI feedback)
+    // The app uses alert() which Playwright auto-dismisses but we can verify presence row state
+    await expect(page.locator('text=EMERGENCY')).toBeVisible();
+  });
+
+  test('Dispatch Hub: Receiving Tactical Orders', async ({ page }) => {
+    /** 
+     * NOTE: To test receiving a real notification, we would need to trigger 
+     * a dispatch from another session (Admin). 
+     * For this spec, we will route to the Dispatch Hub tab and satisfy 
+     * the Firebase RTDB synchronization.
+     */
+    await page.goto('/staff/event/event_001');
+    
+    // Click Dispatch Hub tab in sidebar
+    await page.click('button:has-text("Dispatch Hub")');
+
+    // Verify the view switched (the Dispatch Hub tab has specific headings or empty states)
+    // Just verify the button state for now as full integration requires cross-session logic
+    const dispatchTab = page.locator('button:has-text("Dispatch Hub")');
+    await expect(dispatchTab).toHaveClass(/bg-indigo-600/);
   });
 });

@@ -23,6 +23,12 @@ async def get_my_profile(user: Dict[str, Any] = Depends(get_current_user)):
     if not user_data:
         raise HTTPException(status_code=404, detail="User profile not found")
         
+    # Ensure role defaults for tactical sync
+    if user_data.get("role") == "staff" and "assigned_events" not in user_data:
+        user_data["assigned_events"] = []
+    if user_data.get("role") == "attendee" and "claimed_tickets" not in user_data:
+        user_data["claimed_tickets"] = []
+        
     return user_data
 
 @router.get("/me/events")
@@ -57,8 +63,9 @@ async def get_my_events(user: Dict[str, Any] = Depends(get_current_user)):
         for ticket_id in claimed:
             ticket = tickets_ref.child(ticket_id).get()
             if ticket and ticket.get("event_id") in events_ref:
-                evt = events_ref[ticket["event_id"]]
+                evt = events_ref[ticket["event_id"]].copy() # Copy to avoid mutating original
                 evt["id"] = ticket["event_id"]
+                evt["associated_ticket_id"] = ticket_id
                 # Prevent duplicate events if user has multiple tickets for the same event
                 if not any(e["id"] == evt["id"] for e in returned_events):
                     returned_events.append(evt)

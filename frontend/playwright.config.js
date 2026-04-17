@@ -51,9 +51,13 @@ export default defineConfig({
   /* The webServer block starts the Vite dev server automatically.
    * The manual "npm run dev &" in ci.yml is not needed — Playwright handles it. */
   webServer: {
-    command: 'npm run dev',
+    command: '/usr/local/bin/npx vite',
     url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
+    env: {
+      ...process.env,
+      PATH: `/usr/local/bin:/opt/homebrew/bin:${process.env.PATH}`,
+    },
   },
 });

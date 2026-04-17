@@ -19,12 +19,16 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let lastToken = null;
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        setLoading(true); // Maintain loading while profile fetches
-        setCurrentUser(user);
         try {
           const token = await user.getIdToken();
+          if (token === lastToken) return; // Prevent loop if token hasn't changed
+          lastToken = token;
+          
+          setLoading(true);
+          setCurrentUser(user);
           const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users/me`, {
             headers: {
               'Authorization': `Bearer ${token}`
@@ -43,7 +47,8 @@ export function AuthProvider({ children }) {
           setLoading(false);
         }
       } else {
-        setCurrentUser(null);
+        lastToken = null;
+        setCurrentUser(user);
         setUserProfile(null);
         setLoading(false);
       }
@@ -52,30 +57,32 @@ export function AuthProvider({ children }) {
     return unsubscribe;
   }, []);
 
-  async function syncUserWithBackend(name, email, role, token) {
+  async function syncUserWithBackend(name, email, role, token, serviceKey = null) {
     const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/sync`, {
       method: "POST",
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify({ name, email, role })
+      body: JSON.stringify({ name, email, role, service_key: serviceKey })
     });
     if (!res.ok) throw new Error("Failed to sync user with backend");
     const data = await res.json();
     return data.user;
   }
 
-  async function register(name, email, password, role) {
+  async function register(name, email, password, role, serviceKey = null) {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const token = await userCredential.user.getIdToken();
-    const profile = await syncUserWithBackend(name, email, role, token);
+    const profile = await syncUserWithBackend(name, email, role, token, serviceKey);
     setUserProfile(profile);
     return userCredential;
   }
 
   async function login(email, password) {
-    return signInWithEmailAndPassword(auth, email, password);
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    // Profile will be auto-fetched by the onAuthStateChanged listener
+    return userCredential;
   }
 
   async function logout() {

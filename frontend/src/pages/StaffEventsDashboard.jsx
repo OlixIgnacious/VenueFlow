@@ -25,6 +25,13 @@ export default function StaffEventsDashboard() {
     fetchEvents();
   }, []);
 
+  useEffect(() => {
+    if (!loading && events.length === 1 && !location.state?.navigatedBack) {
+      console.log(`[StaffEventsDashboard] Zero-Tap Entry: Launching ${events[0].name}`);
+      navigate(`/staff/event/${events[0].id}`, { replace: true });
+    }
+  }, [loading, events, navigate, location.state]);
+
   async function fetchEvents() {
     try {
       const { currentUser } = (await import('../services/firebase')).auth;

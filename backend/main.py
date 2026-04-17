@@ -72,6 +72,14 @@ app = FastAPI(
     version="1.0.0", 
     lifespan=lifespan
 )
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    print(f"[Backend] Request: {request.method} {request.url.path}")
+    response = await call_next(request)
+    print(f"[Backend] Response: {response.status_code}")
+    return response
+
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 

@@ -1,22 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Shield, LogOut, UserPlus } from 'lucide-react';
+import { 
+  Shield, 
+  LogOut, 
+  UserPlus, 
+  LayoutDashboard, 
+  Users, 
+  Settings, 
+  Bell, 
+  ChevronRight,
+  RefreshCw,
+  Activity,
+  MapPin,
+  AlertCircle,
+  Brain
+} from 'lucide-react';
+import { auth, rtdb } from '../services/firebase';
+import { ref as dbRef, onValue } from 'firebase/database';
+import IntelligenceHubView from '../components/IntelligenceHubView';
 
 export default function AdminDashboard() {
   const { userProfile, logout } = useAuth();
   const [events, setEvents] = useState([]);
   const [staffEmail, setStaffEmail] = useState('');
   const [selectedEventId, setSelectedEventId] = useState('');
+  const [activeTab, setActiveTab] = useState('overview'); // overview, intelligence, personnel, incidents
+  const [isLoading, setIsLoading] = useState(true);
+  const [allIncidents, setAllIncidents] = useState([]);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    fetchEvents();
-  }, []);
 
   async function fetchEvents() {
     try {
-      const { currentUser } = (await import('../services/firebase')).auth;
+      setIsLoading(true);
+      const currentUser = auth.currentUser;
+      if (!currentUser) return;
       const token = await currentUser.getIdToken();
       const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users/me/events`, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -24,101 +42,127 @@ export default function AdminDashboard() {
       if (res.ok) {
         const data = await res.json();
         setEvents(data);
-        if (data.length > 0) setSelectedEventId(data[0].id);
+        if (data.length > 0 && !selectedEventId) setSelectedEventId(data[0].id);
       }
     } catch (e) {
-      console.error(e);
+      console.error('[AdminDashboard] Event fetch error:', e);
+    } finally {
+      setIsLoading(false);
     }
   }
 
-  function handleAssignStaff(e) {
-    e.preventDefault();
-    if (!staffEmail || !selectedEventId) return;
-    
-    // MOCK DATA for Hackathon
-    alert(`Mock Success: Staff user '${staffEmail}' has been assigned to event '${selectedEventId}'.`);
-    setStaffEmail('');
+  useEffect(() => {
+    if (userProfile) fetchEvents();
+  }, [userProfile]);
+
+  useEffect(() => {
+    if (!selectedEventId) return;
+    const incidentsRef = dbRef(rtdb, `incidents/${selectedEventId}`);
+    const unsubscribe = onValue(incidentsRef, (snap) => {
+      const data = snap.val();
+      setAllIncidents(data ? Object.entries(data).map(([id, val]) => ({ id, ...val })) : []);
+    });
+    return () => unsubscribe();
+  }, [selectedEventId]);
+
+  if (isLoading) {
+    return (
+      <div className="flex bg-slate-950 min-h-screen items-center justify-center">
+        <RefreshCw className="text-blue-500 animate-spin" size={32} />
+      </div>
+    );
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-6 pt-12">
-      <div className="flex justify-between items-center mb-10 border-b border-slate-800 pb-6">
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-rose-400 to-orange-400 bg-clip-text text-transparent flex items-center">
-            <Shield className="text-rose-400 mr-3" /> Admin Control
-          </h1>
-          <p className="text-slate-400 mt-2">Welcome Admin, {userProfile?.name}</p>
-        </div>
-        <button 
-          onClick={logout} 
-          className="flex items-center space-x-2 text-slate-400 hover:text-rose-400 transition-colors"
-        >
-          <LogOut size={18} /> <span>Sign Out</span>
-        </button>
-      </div>
-
-      <div className="grid md:grid-cols-3 gap-8">
-        
-        {/* Left Col: Staff Assignment */}
-        <div className="md:col-span-1 bg-slate-900 p-6 rounded-xl border border-slate-800 h-fit">
-          <h2 className="text-lg font-semibold text-slate-200 mb-4 border-b border-slate-800 pb-2 flex items-center">
-            <UserPlus className="mr-2 text-indigo-400" size={18}/> Assign Staff
-          </h2>
-          <form onSubmit={handleAssignStaff} className="space-y-4 text-sm">
-            <div>
-              <label className="block text-slate-400 mb-1">Staff Email</label>
-              <input 
-                type="email" 
-                placeholder="staff@venueflow.com"
-                value={staffEmail}
-                onChange={e => setStaffEmail(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-slate-200 focus:outline-none focus:border-indigo-500"
-              />
-            </div>
-            <div>
-              <label className="block text-slate-400 mb-1">Target Event</label>
-              <select 
-                value={selectedEventId} 
-                onChange={e => setSelectedEventId(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-slate-200 focus:outline-none focus:border-indigo-500"
-              >
-                {events.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
-              </select>
-            </div>
-            <button 
-              type="submit" 
-              className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded font-medium transition-colors"
-            >
-              Assign Role
-            </button>
-          </form>
+    <div className="flex bg-slate-950 min-h-screen text-slate-100 font-sans selection:bg-blue-600/30">
+      
+      {/* Sidebar navigation */}
+      <aside className="w-72 border-r border-slate-900 bg-slate-950 p-6 flex flex-col fixed h-full z-20">
+        <div className="flex items-center space-x-3 mb-10 px-2 cursor-pointer" onClick={() => setActiveTab('overview')}>
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg shadow-blue-900/40">
+            <Shield className="text-white" size={20} />
+          </div>
+          <h1 className="text-xl font-black tracking-tight uppercase italic">Admin<span className="text-blue-500">Node</span></h1>
         </div>
 
-        {/* Right Col: Events */}
-        <div className="md:col-span-2">
-          <h2 className="text-xl font-semibold text-slate-200 mb-4">Global Events Overview</h2>
-          <div className="grid sm:grid-cols-2 gap-4">
-            {events.map((evt) => (
-              <div 
-                key={evt.id}
-                onClick={() => navigate(`/staff/event/${evt.id}`)}
-                className="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 p-5 rounded-xl cursor-pointer transition-all hover:shadow-lg hover:shadow-emerald-900/20 group"
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <h3 className="font-bold text-slate-200 group-hover:text-emerald-400 transition-colors">{evt.name}</h3>
-                  <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${evt.status === 'live' ? 'bg-rose-500/20 text-rose-400' : 'bg-blue-500/20 text-blue-400'}`}>
-                    {evt.status.toUpperCase()}
-                  </span>
-                </div>
-                <p className="text-slate-400 text-xs mb-3">{new Date(evt.start_time).toLocaleString()}</p>
-                <div className="text-xs font-medium text-emerald-500 flex items-center">
-                  Monitor Dash &rarr;
+        <nav className="space-y-2 flex-1">
+          <button onClick={() => setActiveTab('overview')} className={`w-full flex items-center space-x-4 px-5 py-3.5 rounded-2xl transition-all font-bold text-xs uppercase tracking-widest ${activeTab === 'overview' ? 'bg-slate-900 text-white shadow-xl' : 'text-slate-500 hover:bg-slate-900/50 hover:text-slate-300'}`}><LayoutDashboard size={18} /> <span>Global Grid</span></button>
+          
+          {selectedEventId && (
+            <>
+              <button onClick={() => setActiveTab('intelligence')} className={`w-full flex items-center space-x-4 px-5 py-3.5 rounded-2xl transition-all font-black text-xs uppercase tracking-widest ${activeTab === 'intelligence' ? 'bg-blue-600 text-white shadow-xl shadow-blue-900/20' : 'text-slate-500 hover:bg-slate-900/50 hover:text-blue-400'}`}><Activity size={18} /> <span>Intelligence Hub</span></button>
+              <button onClick={() => setActiveTab('personnel')} className={`w-full flex items-center space-x-4 px-5 py-3.5 rounded-2xl transition-all font-black text-xs uppercase tracking-widest ${activeTab === 'personnel' ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-900/20' : 'text-slate-500 hover:bg-slate-900/50 hover:text-indigo-400'}`}><Users size={18} /> <span>Personnel Matrix</span></button>
+              <button onClick={() => setActiveTab('incidents')} className={`w-full flex items-center space-x-4 px-5 py-3.5 rounded-2xl transition-all font-black text-xs uppercase tracking-widest ${activeTab === 'incidents' ? 'bg-rose-600 text-white shadow-xl shadow-rose-900/20' : 'text-slate-500 hover:bg-slate-900/50 hover:text-rose-400'}`}><AlertCircle size={18} /> <span>Incident Command</span></button>
+            </>
+          )}
+        </nav>
+
+        <div className="mt-auto pt-8 border-t border-slate-900 space-y-5">
+          <div className="px-5 py-6 bg-slate-900/50 rounded-3xl border border-slate-900 shadow-inner">
+            <p className="text-[10px] text-slate-600 uppercase tracking-widest font-black mb-2 opacity-60 italic">System Operator</p>
+            <p className="text-xs font-black text-slate-200 uppercase tracking-tight">{userProfile?.name || 'Authorized Admin'}</p>
+          </div>
+          <button onClick={logout} className="w-full flex items-center space-x-4 px-5 py-3.5 text-slate-600 hover:text-rose-500 transition-all font-black text-[10px] uppercase tracking-widest group"><LogOut size={18} className="group-hover:translate-x-1 transition-transform" /> <span>Disconnect</span></button>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 ml-72 p-12 min-h-screen">
+        <header className="flex justify-between items-start mb-16">
+          <div>
+            <h2 className="text-5xl font-black text-white tracking-tighter uppercase italic leading-none">{activeTab.replace('_', ' ')}</h2>
+            <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] mt-4 opacity-50">{selectedEventId ? `Connected Frequency: ${events.find(e => e.id === selectedEventId)?.name}` : 'Real-time monitoring of global event load levels.'}</p>
+          </div>
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl px-5 py-3 flex items-center space-x-4 shadow-xl shadow-black/20"><div className="w-2 h-2 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500 animate-pulse" /><span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Global Cloud Synced</span></div>
+        </header>
+
+        <section className="animate-in fade-in slide-in-from-bottom-8 duration-700">
+          {activeTab === 'overview' && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+              <div className="lg:col-span-2 space-y-8">
+                <h3 className="text-xs font-black text-slate-700 uppercase tracking-[0.3em] mb-4 italic">Active Tactical Deployments</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {events.map((evt) => (
+                    <div key={evt.id} onClick={() => { setSelectedEventId(evt.id); setActiveTab('intelligence'); }} className="group bg-slate-900/50 border border-slate-900 hover:border-blue-500/50 p-8 rounded-[2.5rem] cursor-pointer transition-all hover:shadow-2xl hover:shadow-blue-600/10 active:scale-95">
+                      <div className="flex items-center justify-between mb-6">
+                        <div className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${evt.status === 'live' ? 'bg-rose-500/10 text-rose-500 border border-rose-500/20' : 'bg-blue-500/10 text-blue-500 border border-blue-500/20'}`}>{evt.status}</div>
+                        <Activity size={18} className="text-slate-800 group-hover:text-blue-500 transition-colors" />
+                      </div>
+                      <h4 className="text-2xl font-black text-white mb-2 group-hover:text-blue-400 transition-colors tracking-tight uppercase italic">{evt.name}</h4>
+                      <div className="flex items-center justify-between border-t border-slate-900/50 pt-6 mt-4">
+                        <div className="flex items-center space-x-2 text-slate-500 font-bold"><MapPin size={14} /> <span className="text-[10px] uppercase tracking-widest">{evt.venue_id}</span></div>
+                        <div className="text-[10px] font-black text-blue-500 uppercase flex items-center opacity-40 group-hover:opacity-100 transition-all tracking-widest">ACCESS INTEL <ChevronRight size={14} className="ml-1" /></div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </div>
+              <div className="space-y-10">
+                <div className="bg-slate-900 p-10 rounded-[3rem] border border-slate-900 shadow-2xl relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity"><UserPlus size={120} className="text-white" /></div>
+                  <h3 className="text-xl font-black mb-8 flex items-center italic uppercase tracking-tighter">Dispatch Entry</h3>
+                  <form onSubmit={(e) => { e.preventDefault(); alert("Key broadcasted."); setStaffEmail(''); }} className="space-y-6">
+                    <div><label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1 mb-3 block">Personnel Email</label><input type="email" value={staffEmail} onChange={e => setStaffEmail(e.target.value)} placeholder="personnel@venueflow.ai" className="w-full bg-slate-950 border border-slate-900 rounded-2xl px-5 py-4 text-xs font-bold focus:ring-2 focus:ring-blue-600 outline-none transition-all placeholder:text-slate-800 shadow-inner" /></div>
+                    <button className="w-full bg-blue-600 hover:bg-blue-500 text-white py-4.5 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-2xl shadow-blue-900/40 transition-all active:scale-95">GRANT ACCESS</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'intelligence' && selectedEventId && (
+            <IntelligenceHubView eventId={selectedEventId} venue={null} initialTab="list" />
+          )}
+
+          {activeTab === 'personnel' && selectedEventId && (
+            <IntelligenceHubView eventId={selectedEventId} venue={null} initialTab="personnel" />
+          )}
+
+          {activeTab === 'incidents' && selectedEventId && (
+            <IntelligenceHubView eventId={selectedEventId} venue={null} initialTab="incidents" />
+          )}
+        </section>
+      </main>
     </div>
   );
 }

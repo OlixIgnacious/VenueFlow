@@ -286,6 +286,7 @@ def seed():
     db.reference('/tickets').set(tickets)
 
     # 7. Mock Users Data
+    # Adding a large staff pool (30+)
     users = {
         "admin_mock_uid": {
             "name": "Admin User",
@@ -293,26 +294,12 @@ def seed():
             "password": "password123",
             "role": "admin"
         },
-        "staff_mock_uid": {
-            "name": "Staff Guard",
-            "email": "staff_gate@venueflow.com",
-            "password": "password123",
-            "role": "staff",
-            "assigned_events": ["event_001"]
-        },
         "tony_stark_uid": {
             "name": "Tony Stark",
             "email": "tony@stark.com",
             "password": "password123",
             "role": "attendee",
             "claimed_tickets": ["IND-AUS-101", "EXPIRED-STADIUM"]
-        },
-        "staff_two_uid": {
-            "name": "Staff Mary",
-            "email": "staff_two@venueflow.com",
-            "password": "password123",
-            "role": "staff",
-            "assigned_events": ["event_006", "event_005"]
         },
         "peter_parker_uid": {
             "name": "Peter Parker",
@@ -322,6 +309,27 @@ def seed():
             "claimed_tickets": ["TECH-EXPO-2026", "THEME-PARK-NYE"]
         }
     }
+
+    # Generate 30 Staff Users
+    staff_names = [
+        "Steve Rogers", "Natasha Romanoff", "Bruce Banner", "Thor Odinson", "Clint Barton",
+        "Wanda Maximoff", "Vision", "Sam Wilson", "James Rhodes", "Bucky Barnes",
+        "Scott Lang", "Hope van Dyne", "T'Challa", "Carol Danvers", "Peter Quill",
+        "Gamora", "Drax", "Rocket Raccoon", "Groot", "Mantice",
+        "Stephen Strange", "Wong", "Arthur Curry", "Barry Allen", "Victor Stone",
+        "Diana Prince", "Clark Kent", "Bruce Wayne", "Hal Jordan", "Oliver Queen"
+    ]
+
+    for i, name in enumerate(staff_names):
+        uid = f"staff_uid_{i+1}"
+        email = f"staff_{i+1}@venueflow.com"
+        users[uid] = {
+            "name": name,
+            "email": email,
+            "password": "password123",
+            "role": "staff",
+            "assigned_events": ["event_001", "event_004"] if i < 20 else ["event_006", "event_005"]
+        }
     
     # Clean up and seed Auth + DB
     rtdb_users = {}
@@ -336,13 +344,11 @@ def seed():
             )
             print(f"  Created auth user: {user_data['email']}")
         except auth.EmailAlreadyExistsError:
-            # Update password if it already exists to guarantee it works
             auth.update_user(uid=uid, password=user_data["password"])
             print(f"  Auth user existed, updated password: {user_data['email']}")
         except Exception as e:
             print(f"  Skipped auth creation for {user_data['email']}: {e}")
 
-        # Strip password before saving to RTDB
         db_user = user_data.copy()
         del db_user["password"]
         rtdb_users[uid] = db_user
@@ -350,25 +356,24 @@ def seed():
     db.reference('/users').set(rtdb_users)
 
     # 8. Command & Control: Staff Presence
-    # Initialize initial presence for active staff
-    presence = {
-        "event_001": {
-            "staff_mock_uid": {
-                "name": "Staff Guardhub",
-                "current_gate_id": "entry_A",
-                "status": "active",
+    # FORCE BOTTLENECK: Put 29 staff at Gate A, leave Gate B empty.
+    presence = {"event_001": {}}
+    
+    for i in range(30):
+        uid = f"staff_uid_{i+1}"
+        if "event_001" in users[uid]["assigned_events"]:
+            # All 29 staff at Gate A to create a massive imbalance
+            # except maybe 1 at C for some variety
+            status = "active"
+            gate = "entry_A" if i < 29 else "entry_C"
+            
+            presence["event_001"][uid] = {
+                "name": users[uid]["name"],
+                "current_gate_id": gate,
+                "status": status,
                 "last_reported": datetime.now(timezone.utc).isoformat()
             }
-        },
-        "event_006": {
-            "staff_two_uid": {
-                "name": "Staff Mary",
-                "current_gate_id": None,
-                "status": "inactive",
-                "last_reported": (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
-            }
-        }
-    }
+            
     db.reference('/staff_presence').set(presence)
 
     # 9. Initial Notifications (Logs)

@@ -6,6 +6,7 @@ import firebase_admin
 from firebase_admin import credentials, db
 from backend.config import settings
 import logging
+from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 
@@ -157,6 +158,12 @@ class FirebaseClient:
             status (str): The new status code.
         """
         db.reference(f'/tickets/{ticket_id}').update({'status': status})
+
+    def get_timestamp(self) -> str:
+        """
+        Returns a RFC3339/ISO-8601 compliant UTC timestamp.
+        """
+        return datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
 
 # Global singleton instance
 firebase_client = FirebaseClient()

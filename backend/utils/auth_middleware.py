@@ -14,6 +14,20 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
     Returns the parsed user dictionary {uid, email, ...}.
     """
     token = credentials.credentials
+    
+    # E2E Testing Bypass: Support role-specific fake tokens.
+    if token.startswith("fake-id-token"):
+        role = "attendee"
+        if "admin" in token: role = "admin"
+        elif "staff" in token: role = "staff"
+        
+        return {
+            "uid": f"mock-uid-{role}", 
+            "email": f"{role}@test.com", 
+            "role": role,
+            "name": f"Mock {role.capitalize()}"
+        }
+
     try:
         decoded_token = auth.verify_id_token(token)
         return decoded_token

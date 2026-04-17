@@ -1,0 +1,122 @@
+[
+  {
+    "notes": "── Event 001 · India vs Australia T20 ── Active event_id",
+    "active_event_id": "event_001"
+  },
+  {
+    "ticket_id": "IND-AUS-101",
+    "event": "India vs Australia — T20",
+    "venue": "M. Chinnaswamy Stadium",
+    "date": "April 11, 2026",
+    "persons": 2,
+    "seat": "Block B, Row 12",
+    "venue_address": "Cubbon Park, Bengaluru, Karnataka 560001"
+  },
+  {
+    "ticket_id": "IND-AUS-102",
+    "event": "India vs Australia — T20",
+    "venue": "M. Chinnaswamy Stadium",
+    "date": "April 11, 2026",
+    "persons": 1,
+    "seat": "Block A, Row 1",
+    "venue_address": "Cubbon Park, Bengaluru, Karnataka 560001"
+  },
+  {
+    "ticket_id": "IND-AUS-103",
+    "event": "India vs Australia — T20",
+    "venue": "M. Chinnaswamy Stadium",
+    "date": "April 11, 2026",
+    "persons": 4,
+    "seat": "Block C, Row 7",
+    "venue_address": "Cubbon Park, Bengaluru, Karnataka 560001"
+  },
+  {
+    "ticket_id": "IND-AUS-104",
+    "event": "India vs Australia — T20",
+    "venue": "M. Chinnaswamy Stadium",
+    "date": "April 11, 2026",
+    "persons": 3,
+    "seat": "Block D, Row 22",
+    "venue_address": "Cubbon Park, Bengaluru, Karnataka 560001"
+  },
+  {
+    "ticket_id": "IND-AUS-105",
+    "event": "India vs Australia — T20",
+    "venue": "M. Chinnaswamy Stadium",
+    "date": "April 11, 2026",
+    "persons": 1,
+    "seat": "Block F, Row 5",
+    "venue_address": "Cubbon Park, Bengaluru, Karnataka 560001"
+  },
+  {
+    "ticket_id": "IND-AUS-VIP-01",
+    "event": "India vs Australia — T20",
+    "venue": "M. Chinnaswamy Stadium",
+    "date": "April 11, 2026",
+    "persons": 2,
+    "seat": "VIP Box 1",
+    "venue_address": "Cubbon Park, Bengaluru, Karnataka 560001"
+  },
+  {
+    "notes": "── Event 002 · Bengaluru Tech Summit 2026 ──",
+    "active_event_id": "event_002"
+  },
+  {
+    "ticket_id": "TECH-SUMMIT-01",
+    "event": "Bengaluru Tech Summit 2026",
+    "venue": "Bangalore International Exhibition Centre",
+    "date": "April 14, 2026",
+    "persons": 1,
+    "seat": "Zone C",
+    "venue_address": "10th Mile, Tumkur Main Road, Madavara, Bengaluru 560073"
+  },
+  {
+    "ticket_id": "TECH-SUMMIT-02",
+    "event": "Bengaluru Tech Summit 2026",
+    "venue": "Bangalore International Exhibition Centre",
+    "date": "April 14, 2026",
+    "persons": 2,
+    "seat": "Zone A",
+    "venue_address": "10th Mile, Tumkur Main Road, Madavara, Bengaluru 560073"
+  },
+  {
+    "ticket_id": "TECH-SUMMIT-03",
+    "event": "Bengaluru Tech Summit 2026",
+    "venue": "Bangalore International Exhibition Centre",
+    "date": "April 14, 2026",
+    "persons": 1,
+    "seat": "Zone B",
+    "venue_address": "10th Mile, Tumkur Main Road, Madavara, Bengaluru 560073"
+  },
+  {
+    "ticket_id": "TECH-SUMMIT-04",
+    "event": "Bengaluru Tech Summit 2026",
+    "venue": "Bangalore International Exhibition Centre",
+    "date": "April 14, 2026",
+    "persons": 3,
+    "seat": "Zone E",
+    "venue_address": "10th Mile, Tumkur Main Road, Madavara, Bengaluru 560073"
+  },
+  {
+    "ticket_id": "TECH-SUMMIT-05",
+    "event": "Bengaluru Tech Summit 2026",
+    "venue": "Bangalore International Exhibition Centre",
+    "date": "April 14, 2026",
+    "persons": 1,
+    "seat": "Zone H",
+    "venue_address": "10th Mile, Tumkur Main Road, Madavara, Bengaluru 560073"
+  },
+  {
+    "ticket_id": "TECH-SUMMIT-SPEAKER-01",
+    "event": "Bengaluru Tech Summit 2026",
+    "venue": "Bangalore International Exhibition Centre",
+    "date": "April 14, 2026",
+    "persons": 1,
+    "seat": "Speaker Lounge",
+    "venue_address": "10th Mile, Tumkur Main Road, Madavara, Bengaluru 560073"
+  },
+  {
+    "notes": "── Reset a used ticket (admin endpoint) ──",
+    "reset_command": "curl -s -X POST http://localhost:8000/api/admin/reset-ticket/{ticket_id} -H 'Authorization: Bearer venueflow-secret-2026'"
+  }
+]

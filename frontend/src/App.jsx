@@ -3,6 +3,10 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { VenueProvider } from './context/VenueContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import EventDiscovery from './pages/EventDiscovery';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import PublicRoute from './components/PublicRoute';
+import AuthPortal from './pages/AuthPortal';
 
 // Lazy loaded heavy dashboard and feature components
 const AttendeeEntry = lazy(() => import('./pages/AttendeeEntry'));
@@ -11,26 +15,6 @@ const StaffDashboard = lazy(() => import('./pages/StaffDashboard'));
 const AttendeeDashboard = lazy(() => import('./pages/AttendeeDashboard'));
 const StaffEventsDashboard = lazy(() => import('./pages/StaffEventsDashboard'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
-
-/**
- * Main application component for VenueFlow.
- * 
- * Orchestrates the global providers (Error Boundaries, Venue Context) 
- * and defines the primary client-side routing routes for attendees and staff.
- * 
- * Routes:
- * - / : Event Discovery (Landing)
- * - /entry : Ticket Validation & Entry
- * - /recommendation : AI Entry Recommendations
- * - /staff : Live Crowd Monitoring Dashboard
- * 
- * @returns {JSX.Element} The root application component.
- */
-import { AuthProvider } from './context/AuthContext';
-import ProtectedRoute from './components/ProtectedRoute';
-import PublicRoute from './components/PublicRoute';
-import AuthLogin from './pages/AuthLogin';
-import AuthRegister from './pages/AuthRegister';
 
 function App() {
   return (
@@ -45,14 +29,10 @@ function App() {
                 </div>
               }>
                 <Routes>
-                  {/* Public Landing & Attendee Auth */}
+                  {/* Public Landing & Unified Auth */}
                   <Route path="/" element={<PublicRoute><EventDiscovery /></PublicRoute>} />
-                  <Route path="/login" element={<PublicRoute><AuthLogin roleTitle="Attendee" role="attendee" registerPath="/register" /></PublicRoute>} />
-                  <Route path="/register" element={<PublicRoute><AuthRegister roleTitle="Attendee" role="attendee" loginPath="/login" /></PublicRoute>} />
-
-                  {/* Staff Auth */}
-                  <Route path="/staff/login" element={<PublicRoute><AuthLogin roleTitle="Staff" role="staff" registerPath="/staff/register" /></PublicRoute>} />
-                  <Route path="/staff/register" element={<PublicRoute><AuthRegister roleTitle="Staff" role="staff" loginPath="/staff/login" /></PublicRoute>} />
+                  <Route path="/login" element={<PublicRoute><AuthPortal /></PublicRoute>} />
+                  <Route path="/register" element={<PublicRoute><AuthPortal /></PublicRoute>} />
 
                   {/* Protected Attendee Routes */}
                   <Route path="/dashboard" element={

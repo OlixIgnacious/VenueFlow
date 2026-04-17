@@ -3,138 +3,100 @@
 [![CI/CD Pipeline](https://github.com/OlixIgnacious/VenueFlow/actions/workflows/deploy.yml/badge.svg)](https://github.com/OlixIgnacious/VenueFlow/actions)
 [![FastAPI](https://img.shields.io/badge/FastAPI-005863?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)](https://reactjs.org/)
-[![Gemini 2.5](https://img.shields.io/badge/Gemini_2.5_Flash-4285F4?style=flat&logo=google&logoColor=white)](https://deepmind.google/technologies/gemini/)
+[![Gemini-2.0-Flash](https://img.shields.io/badge/Gemini_2.0_Flash-4285F4?style=flat&logo=google&logoColor=white)](https://deepmind.google/technologies/gemini/)
 
-VenueFlow is a **venue-agnostic, event-type-aware** crowd routing platform. It solves entry-point congestion at large-scale events by providing attendees with personalized AI-powered recommendations and staff with real-time crowd intelligence dashboards.
+VenueFlow is a **venue-agnostic, event-type-aware** crowd routing platform. It solves entry-point congestion at large-scale events by providing attendees with personalized AI-powered recommendations and staff with real-time crowd intelligence via a unified **Tactical Intelligence Hub**.
 
 ---
 
 ## 🏗️ System Architecture
 
+VenueFlow uses a "Shell-and-Module" architecture. Tactical visualization logic is consolidated into a singular **Intelligence Hub** component, which is dynamically gated based on the operator's clearance level.
+
 ```mermaid
 graph TD
-    subgraph Frontend
-        A[Attendee UI] --> B[VenueContext]
-        C[Staff UI] --> B
-        B --> D[useEntryPoints Hook]
+    subgraph Client [Frontend - React/Vite]
+        A[Unified Auth Portal] --> B{Role Branch}
+        B -- Attendee --> C[Ticket Repository]
+        B -- Staff/Admin --> D[Shell Dashboard]
+        D --> E[Intelligence Hub Module]
     end
 
-    subgraph Backend
-        E[FastAPI Routers] --> F[Gemini Service]
-        E --> G[Simulator Service]
-        E --> H[Firebase Client]
+    subgraph Logic [Backend - FastAPI]
+        F[API Routers] --> G[Gemini AI Orchestrator]
+        F --> H[Simulator Engine]
+        F --> I[RTDB Sync Service]
     end
 
-    subgraph Data Layer
-        D <--> I[(Firebase RTDB)]
-        H <--> I
+    subgraph Data [Persistence - Firebase]
+        J[(Realtime Database)] <--> I
+        J <--> E
     end
 
-    F --> J[Vertex AI / Gemini 2.5 Flash]
+    G --> K[Gemini 2.0 Flash]
 ```
 
 ---
 
-## 🛡️ Secure Auth Architecture
+## 🛡️ Hardened Security Matrix
 
 VenueFlow implements a comprehensive security matrix to handle thousands of concurrent users across different permission levels:
 
 | User Role | Entry Point | Target Interface | Protection Guard |
 | :--- | :--- | :--- | :--- |
-| **Attendee** | `/` | `/dashboard` | `ProtectedRoute (attendee)` |
-| **Staff** | `/staff-gate` | `/staff/dashboard` | `ProtectedRoute (staff)` |
-| **Admin** | `/staff-gate` | `/admin/dashboard` | `ProtectedRoute (admin)` |
+| **Attendee** | `/` | `AttendeeDashboard` | `ProtectedRoute (attendee)` |
+| **Staff** | `/staff-gate` | `Intelligence Hub (Tactical)` | `ProtectedRoute (staff)` |
+| **Admin** | `/staff-gate` | `Intelligence Hub (Global)` | `ProtectedRoute (admin)` |
 
 > [!IMPORTANT]
-> **PublicRoute Guard**: Any attempts by an authenticated user to hit public landing, login, or registration pages results in an immediate logical redirect to their designated home state, preserving the application's secure session.
+> **Persistent State Management**: The dashboards use a state-driven tab system instead of route-based links. This ensures the high-fidelity sidebar remains persistent during tactical maneuvers, preventing UI "ghosting" or re-renders.
 
 ---
 
-## 🧪 AI Evaluation & Test Cases
+## 🧬 Tactical Intelligence Hub (Features)
 
-The system's intelligence is validated across three primary operational scenarios. To verify these, run `python3 scripts/seed_firebase.py` and use the following Ticket IDs in the Attendee UI:
-
-### 1. Semantic Proximity Matching
-**Ticket ID**: `IND-AUS-101` (Event: India vs Australia)
-- **Scenario**: Attendee is assigned to **Block B**.
-- **AI Reasoning**: The agent matches "Block B" to **Gate B** via proximity tags.
-- **Result**: Recommends Gate B with a logical "human" tip about its location.
-
-### 2. The Congestion Pivot (Safety First)
-**Ticket ID**: `FEST-VIP-01` (Event: Summer Solstice Fest)
-- **Scenario**: Attendee is assigned to **Zone A**. **Portal A** is closest but is at **95% density** (Critical).
-- **AI Reasoning**: The internal hierarchy detects the density threshold violation and strictly forbids Portal A.
-- **Result**: Proactively pivots the user to **Portal D** or **E**, even if they are slightly further away, prioritizing safety over distance.
-
-### 3. Geospatial Fallback (Resilience)
-**Scenario**: Simulation of AI Service Down / Rate Limited.
-- **Reasoning**: The system triggers its mathematical "Spatial Fallback" engine.
-- **Result**: Calculates the Haversine distance to all gates and selects the closest gate with `<90%` density. The UI explicitly notifies the user: *"AI reasoning unavailable — using spatial routing fallback."*
-
----
-
-## 🌟 Key Features
-[...]
+The **Intelligence Hub** is the mission-critical command center for venue operations.
 
 ### 🧠 Gemini-Powered Recommendations
-Intelligent routing logic that understands venue context, event type, and current gate density. The system now supports both **Ticket ID-based resolution** and **Raw Seat Reference routing**, making it resilient to manual inputs and varied ticketing formats.
-> [!TIP]
-> The AI reconciles denormalized venue config with real-time sensor data to provide "human" tips like *"Gate B is your best bet; it's right by the food court and currently has zero wait."*
+Intelligent routing logic that understands venue context, event type, and current gate density. The system reconciles denormalized venue config with real-time sensor data to provide "human" tips.
 
-### 🗺️ Live Crowd Heatmap
-Visual dashboard for venue staff to spot bottlenecks before they form, using Google Maps JS API. Operators can switch between different scheduled events with seamless context synchronization.
+### 🛡️ Personnel Matrix (Admin Oversight)
+A command-and-control dashboard for venue operators to monitor all staff in real-time:
+- **Live Presence Detection**: Real-time position tracking at gates via RTDB pulses.
+- **Manual Dispatch**: One-click tactical redirection to high-congestion zones.
+- **AI TACTICAL Suggestions**: Automated re-assignment recommendations powered by Gemini's system-wide pattern analysis.
 
-### 🛡️ Authentication 3.0 & Secure Routing
-A hardened role-based access control system using distinct `PublicRoute` and `ProtectedRoute` guards.
-- **Reverse Auth Protection**: Authenticated users are intelligently redirected away from public pages to prevent state confusion.
-- **Strict RBAC**: Attendees, Staff, and Admins are locked into their respective dashboards with sub-second role verification.
-
-### 🔄 Dynamic Event Context Sync
-A robust, URL-aware state management system ensures that attendee and staff interfaces always reflect the correct event context, preventing stale data between sessions.
-
-### 🎭 Total Vocabulary Versatility
-Labels like "Gate", "Door", or "Pavilion" are injected via configuration — zero hardcoding. Switching from a Football Stadium to a Tech Conference is handled dynamically via the `event_id` context.
+### 🚩 Real-time Incident Transmissions (Staff)
+A zero-tap tactical reporting system for field personnel:
+- **Global Synchronization**: Incidents appear instantly on all log dashboards.
+- **Severity-based UI**: Color-coded alerts from technical issues (bravo) to critical emergencies (alpha).
 
 ---
 
-## 📸 Visual Showcase
+## 🧪 Verification & Test Cases
 
-<div align="center">
-  <img src="docs/assets/staff_dashboard.png" width="800" alt="Staff Dashboard" />
-  <p><i>Real-time crowd monitoring and operator dashboard.</i></p>
-  
-  <img src="docs/assets/recommendation.png" width="800" alt="Attendee Recommendations" />
-  <p><i>AI-powered entry point suggestions for attendees.</i></p>
-  
-  <img src="docs/assets/heatmap.png" width="800" alt="Crowd Heatmap" />
-  <p><i>Geographic heatmapping for active congestion monitoring.</i></p>
-</div>
+The system's intelligence is validated across three primary operational scenarios. Run `python3 scripts/seed_firebase.py` and use the following Ticket IDs in the Attendee UI:
+
+### 1. Semantic Proximity Matching
+**Ticket ID**: `IND-AUS-101`
+- **AI Reasoning**: Matches "Block B" seat maps to **Gate B** via semantic tag association.
+- **Result**: Recommends Gate B with a logical "human" tip about its location.
+
+### 2. The Congestion Pivot (Safety Priority)
+**Ticket ID**: `FEST-VIP-01`
+- **AI Reasoning**: Detects >90% density at the closest gate and triggers an immediate safety override.
+- **Result**: Pivots the user to the next available low-density portal, even if distant.
+
+### 3. Geospatial Fallback (Resilience)
+- **Scenario**: Simulated LLM instability or rate limiting.
+- **System Action**: Triggers the mathematical **Haversine Engine**.
+- **Result**: Selects the closest gate with `<85%` density. UI notifies: *"AI reasoning unavailable — using spatial routing fallback."*
 
 ---
 
 ## ⚡ Quick Start
 
-### 1. External Services Setup
-- **Firebase**: Create a project and enable **Realtime Database** (Test Mode). Generate a Service Account JSON.
-- **Google Maps**: Enable **Maps JavaScript API** and **Directions API**.
-- **Gemini**: Obtain an API key from [Google AI Studio](https://aistudio.google.com/).
-
-### 2. Environment Configuration
-Create a `.env` file in the root directory:
-```env
-# Backend
-GEMINI_API_KEY=your_gemini_key
-FIREBASE_DATABASE_URL=https://your-project.firebaseio.com
-FIREBASE_SERVICE_CREDENTIALS={"type": "service_account", ...}
-
-# Frontend (Vite)
-VITE_MAPS_API_KEY=your_maps_key
-VITE_FIREBASE_API_KEY=your_firebase_key
-VITE_FIREBASE_DATABASE_URL=https://your-project.firebaseio.com
-VITE_FIREBASE_PROJECT_ID=your_project_id
-```
-
-### 3. Build & Run
+### 1. Build & Run
 ```bash
 # Backend Installation
 pip install -r backend/requirements.txt
@@ -144,33 +106,19 @@ uvicorn backend.main:app --reload
 cd frontend && npm install && npm run dev
 ```
 
----
-
-## 🛠️ Tech Stack & Security
-
-- **Backend**: FastAPI (Python 3.11) with Google-style Docstrings.
-- **Frontend**: React 18 (Vite) with JSDoc standards.
-- **Auth & Routing**: Firebase Auth + React Router 6 with custom `PublicRoute`/`ProtectedRoute` guards.
-- **AI**: Gemini 2.5 Flash via REST API (Google AI Studio).
-- **Cloud**: Automated keyless deployment to **Google Cloud Run** using GitHub OIDC / Workload Identity Federation.
-- **Real-time**: Firebase Realtime Database for sub-second gate density updates.
-- **Testing**: Playwright E2E suite with 100% pass rate for the Authentication & Navigation Matrix.
+### 2. Environment (Root .env)
+```env
+GEMINI_API_KEY=...
+FIREBASE_DATABASE_URL=...
+VITE_MAPS_API_KEY=...
+VITE_FIREBASE_API_KEY=...
+```
 
 ---
 
-## 📁 Detailed Documentation
-
-For full setup and deployment details, refer to the [Documentation Hub](docs/README.md):
-- 📘 [Firebase Setup Guide](docs/firebase_setup_guide.md)
-- 📗 [GCP & Secret Manager Guide](docs/gcp_setup_guide.md)
-- 📙 [Google Maps API Guide](docs/google_maps_setup_guide.md)
-
----
-
-## 📝 Project Assumptions & Design Decisions
-- **Crowd density is simulated.** Real deployments would use IoT sensors (infrared counters, camera CV models) at each entry point.
-- **Secure by Default.** No long-lived service account keys; the entire CI/CD pipeline uses short-lived tokens via Workload Identity.
-- **Dynamic Context.** The Gemini prompt builder uses a pure functional approach to scale venue-specific labels without hardcoding.
+## 📝 Project Assumptions
+- **Crowd Density**: Simulated via `scripts/seed_firebase.py`. In production, this pulls from infrared counters or CV camera models.
+- **Secure Sessions**: Uses Firebase ID Token verification in the `auth_middleware.py` for all mission-critical endpoints.
 
 ---
 **Hackathon Submission** — *Built for Google Antigravity Challenge*

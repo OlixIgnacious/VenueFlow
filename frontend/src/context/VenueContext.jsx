@@ -61,6 +61,8 @@ export const VenueProvider = ({ children }) => {
     } catch (err) {
       console.error('FetchConfig error:', err);
       setError('Failed to load configuration');
+      // If we failed with a sticky ID, clear it so next refresh can recover
+      sessionStorage.removeItem('active_event_id');
     } finally {
       setLoading(false);
     }
@@ -76,17 +78,27 @@ export const VenueProvider = ({ children }) => {
   // the global venue context is synchronized.
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
+    // 1. Check Query Params (?event_id=...)
     const eventIdFromUrl = searchParams.get('event_id');
     
-    console.log(`[VenueContext] URL Change Detected. event_id (URL): ${eventIdFromUrl}, current (State): ${event?.id}`);
+    // 2. Check Path Params (/staff/event/:eventId or similar)
+    // We manually parse the path for 'event/' segments as useParams isn't available outside Routes
+    const pathSegments = location.pathname.split('/');
+    const eventIndex = pathSegments.indexOf('event');
+    const eventIdFromPath = eventIndex !== -1 && pathSegments[eventIndex + 1] ? pathSegments[eventIndex + 1] : null;
 
-    if (eventIdFromUrl) {
-      if (eventIdFromUrl !== event?.id) {
-        fetchConfig(eventIdFromUrl);
+    const targetEventId = eventIdFromUrl || eventIdFromPath;
+    
+    console.log(`[VenueContext] URL Change Detected. Target ID: ${targetEventId}, Current State: ${event?.id}`);
+
+    if (targetEventId) {
+      if (targetEventId !== event?.id && !error) {
+        console.log(`[VenueContext] URL/State mismatch. Syncing to: ${targetEventId}`);
+        fetchConfig(targetEventId);
       }
-    } else if (!event) {
-      // Fetch default/cached if we have nothing in state
-      console.log('[VenueContext] No event in state or URL, fetching default/cached.');
+    } else if (!event && !error) {
+      // Fetch default/cached if we have nothing in state and no error yet
+      console.log('[VenueContext] Initializing default context.');
       fetchConfig(null);
     }
   }, [location.search]);
