@@ -79,6 +79,9 @@ jobs:
             VITE_FIREBASE_API_KEY:codelab2-490910/FIREBASE_API_KEY
             VITE_FIREBASE_PROJECT_ID:codelab2-490910/FIREBASE_PROJECT_ID
             VITE_FIREBASE_DATABASE_URL:codelab2-490910/FIREBASE_DATABASE_URL
+            VITE_FIREBASE_CREDENTIALS:codelab2-490910/FIREBASE_CREDENTIALS
+            VITE_GEMINI_API_KEY:codelab2-490910/GEMINI_API_KEY
+            VITE_ADMIN_API_KEY:codelab2-490910/ADMIN_API_KEY
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -86,16 +89,41 @@ jobs:
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
       - name: Install dependencies
-        run: cd frontend && npm ci && npx playwright install --with-deps chromium
-      - name: Run frontend tests
+        run: |
+          pip install uv
+          uv pip install --system -r backend/requirements.txt
+          cd frontend && npm ci && npx playwright install --with-deps chromium
+
+      - name: Run Background Backend & Frontend Tests
         env:
           CI: "true"
           VITE_MAPS_API_KEY: ${{ steps.secrets.outputs.VITE_MAPS_API_KEY }}
           VITE_FIREBASE_API_KEY: ${{ steps.secrets.outputs.VITE_FIREBASE_API_KEY }}
           VITE_FIREBASE_PROJECT_ID: ${{ steps.secrets.outputs.VITE_FIREBASE_PROJECT_ID }}
           VITE_FIREBASE_DATABASE_URL: ${{ steps.secrets.outputs.VITE_FIREBASE_DATABASE_URL }}
+          VITE_API_BASE_URL: "http://localhost:8000"
+          # Backend Env
+          FIREBASE_DATABASE_URL: ${{ steps.secrets.outputs.VITE_FIREBASE_DATABASE_URL }}
+          FIREBASE_SERVICE_CREDENTIALS: ${{ steps.secrets.outputs.VITE_FIREBASE_CREDENTIALS }}
+          GEMINI_API_KEY: ${{ steps.secrets.outputs.VITE_GEMINI_API_KEY }}
+          ADMIN_API_KEY: ${{ steps.secrets.outputs.VITE_ADMIN_API_KEY }}
+          TESTING: "true"
         run: |
+          # 1. Start backend in background
+          nohup python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000 &
+          
+          # 2. Wait for backend to be healthy
+          echo "Waiting for backend on port 8000..."
+          timeout 60s bash -c 'until curl -s http://localhost:8000/api/health; do sleep 2; done'
+          
+          # 3. Execute frontend tests
           cd frontend
           npx playwright test
 
