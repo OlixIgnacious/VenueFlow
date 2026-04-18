@@ -76,6 +76,7 @@ export default function StaffEventsDashboard() {
         </div>
         <button 
           onClick={logout} 
+          aria-label="Logout and disconnect from tactical network"
           className="flex items-center space-x-2 text-slate-400 hover:text-rose-400 transition-colors"
         >
           <LogOut size={18} /> <span>Sign Out</span>

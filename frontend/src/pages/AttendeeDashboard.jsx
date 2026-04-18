@@ -125,13 +125,16 @@ export default function AttendeeDashboard() {
             </h2>
             <form onSubmit={handleClaimTicket} className="flex space-x-6">
               <input 
+                id="ticket-id-input"
                 type="text" 
                 placeholder="Enter Terminal Ticket ID (e.g. IND-AUS-101)" 
+                aria-label="Ticket ID for perimeter enrollment"
                 value={ticketId}
                 onChange={e => setTicketId(e.target.value)}
                 className="flex-1 bg-slate-950 border border-slate-800 rounded-2xl px-6 py-5 text-xs font-bold focus:ring-2 focus:ring-emerald-600 outline-none transition-all placeholder:text-slate-800 shadow-inner"
               />
               <button 
+                id="enroll-ticket-button"
                 type="submit" 
                 disabled={loading || !ticketId}
                 className="bg-emerald-600 hover:bg-emerald-500 text-white px-10 py-5 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] disabled:opacity-30 transition-all active:scale-95 shadow-xl shadow-emerald-900/20"

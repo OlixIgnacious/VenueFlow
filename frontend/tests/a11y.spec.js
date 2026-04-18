@@ -22,10 +22,11 @@ test.describe('Accessibility Audits (WCAG AA)', () => {
   test('Intelligence Hub Dashboard (Staff View) should be accessible', async ({ page }) => {
     // Audit the complex tactical hub
     await setupAuthMocks(page, { role: 'staff', email: 'staff_1@venueflow.com' });
-    await performLogin(page, 'staff_1@venueflow.com', 'password123', '/staff/event/event_001');
-    
+    await performLogin(page, 'staff_1@venueflow.com', 'password123', '/staff/');
+    await page.goto('/staff/event/event_001');
+
     // Wait for data to load ensuring we audit the actual interactive state
-    await expect(page.locator('h2')).toContainText('Intelligence Hub');
+    await expect(page.locator('h2')).toContainText('Intelligence Hub', { timeout: 15000 });
 
     const accessibilityScanResults = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])

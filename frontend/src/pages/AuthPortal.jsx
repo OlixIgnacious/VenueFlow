@@ -88,13 +88,13 @@ export default function AuthPortal() {
         <div className="grid grid-cols-2 p-2 b-2">
           <button 
             onClick={() => { setIsRegister(false); navigate('/login'); }}
-            className={`py-4 rounded-[2rem] text-xs font-black uppercase tracking-widest transition-all ${!isRegister ? 'bg-slate-800 text-emerald-400 shadow-lg border border-slate-700' : 'text-slate-500 hover:text-slate-300'}`}
+            className={`py-4 rounded-[2rem] text-xs font-black uppercase tracking-widest transition-all ${!isRegister ? 'bg-slate-800 text-emerald-400 shadow-lg border border-slate-700' : 'text-slate-400 hover:text-slate-200'}`}
           >
             Tactical Login
           </button>
-          <button 
+          <button
             onClick={() => { setIsRegister(true); navigate('/register'); }}
-            className={`py-4 rounded-[2rem] text-xs font-black uppercase tracking-widest transition-all ${isRegister ? 'bg-slate-800 text-emerald-400 shadow-lg border border-slate-700' : 'text-slate-500 hover:text-slate-300'}`}
+            className={`py-4 rounded-[2rem] text-xs font-black uppercase tracking-widest transition-all ${isRegister ? 'bg-slate-800 text-emerald-400 shadow-lg border border-slate-700' : 'text-slate-400 hover:text-slate-200'}`}
           >
             New Enrollment
           </button>
@@ -139,8 +139,10 @@ export default function AuthPortal() {
                 <div className="relative">
                   <Shield className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" size={18} />
                   <input 
+                    id="serviceKey"
                     type="password"
                     placeholder="SERVICE KEY (OPTIONAL)"
+                    aria-label="Service security key for administrative access"
                     value={serviceKey}
                     onChange={(e) => setServiceKey(e.target.value)}
                     className="w-full bg-slate-950 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-sm text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all placeholder:text-slate-700 placeholder:font-black placeholder:text-[10px]"
@@ -153,9 +155,11 @@ export default function AuthPortal() {
                 <div className="relative">
                   <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" size={18} />
                   <input 
+                    id="name"
                     type="text"
                     required
                     placeholder="FULL LEGAL NAME"
+                    aria-label="Full legal name for identity enrollment"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="w-full bg-slate-950 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-sm text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all placeholder:text-slate-700 placeholder:font-black placeholder:text-[10px]"
@@ -167,9 +171,11 @@ export default function AuthPortal() {
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" size={18} />
               <input 
+                id="email"
                 type="email"
                 required
                 placeholder="AUTHENTICATION EMAIL"
+                aria-label="Authentication email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full bg-slate-950 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-sm text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all placeholder:text-slate-700 placeholder:font-black placeholder:text-[10px]"
@@ -179,9 +185,11 @@ export default function AuthPortal() {
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" size={18} />
               <input 
+                id="password"
                 type="password"
                 required
                 placeholder="SECURE ACCESS KEY"
+                aria-label="Secure password or access key"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full bg-slate-950 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-sm text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all placeholder:text-slate-700 placeholder:font-black placeholder:text-[10px]"

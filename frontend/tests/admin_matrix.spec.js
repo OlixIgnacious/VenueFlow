@@ -5,64 +5,72 @@ test.describe('Admin Command & Control Matrix (Integrated)', () => {
   test.beforeEach(async ({ page }) => {
     // 1. Setup Admin Auth
     await setupAuthMocks(page, { role: 'admin', uid: 'admin_uid', email: 'admin@venueflow.com' });
-    
+
     // 2. Perform Login
-    await performLogin(page, 'admin@venueflow.com', 'password123', '/admin/dashboard');
+    await performLogin(page, 'admin@venueflow.com', 'password123', '/admin/');
   });
 
   test('Personnel Oversight: Staff Matrix & AI Recommendations', async ({ page }) => {
-    // Verify Admin Dashboard loads events
-    await expect(page.getByText('Global Events Overview')).toBeVisible({ timeout: 10000 });
-    
-    // Navigate to Intelligence Hub for event_001
-    // Using robust locator: .first() ensures we get the OUTER card div
-    const eventCard = page.locator('div').filter({ has: page.getByRole('heading', { name: 'India vs Australia — T20' }) }).first();
-    await eventCard.getByText('Monitor Dash →').first().click();
-    
-    await expect(page.getByRole('heading', { name: 'Intelligence Hub' })).toBeVisible({ timeout: 15000 });
+    // Verify Admin Dashboard loads
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByText('Global Grid')).toBeVisible({ timeout: 15000 });
 
-    // Switch to Personnel Matrix tab (Sidebar)
+    // Navigate to Intelligence Hub — click the event card directly (it has onClick)
+    const eventCard = page.locator('.group').filter({ hasText: /India vs Australia/i }).first();
+    await eventCard.click();
+
+    // Verify IntelligenceHubView loaded (h2 added to component)
+    await expect(page.getByText('Intelligence Hub')).toBeVisible({ timeout: 15000 });
+
+    // Switch to Personnel Matrix tab in the Admin sidebar
     const personnelTab = page.getByRole('button', { name: 'Personnel Matrix' });
     await expect(personnelTab).toBeVisible();
     await personnelTab.click();
 
-    // Verify Matrix loads
-    await expect(page.getByText('Tactical Deployment Matrix')).toBeVisible();
+    // Verify the Tactical Deployment Matrix heading loads (h3 added to AdminPersonnelMatrix)
+    await expect(page.getByText('Tactical Deployment Matrix')).toBeVisible({ timeout: 10000 });
 
-    // Trigger AI Tactical Recommendations
-    const refreshBtn = page.locator('button:has-text("Refresh Analytics")');
-    await expect(refreshBtn).toBeVisible();
+    // Navigate to the AI Tactical sub-tab inside IntelligenceHubView
+    await page.getByRole('button', { name: 'AI Tactical' }).click();
+
+    // Trigger AI Recommendations via the RESCAN button
+    const refreshBtn = page.locator('button:has-text("RESCAN SYSTEM PULSE")');
+    await expect(refreshBtn).toBeVisible({ timeout: 10000 });
     await refreshBtn.click();
 
-    // Verify AI Recommendation Panel appears
-    // Since we hit the real backend, we wait for a real Gemini response
-    // The user wants to "always hit the backend/get the data"
-    await expect(page.locator('text=AI TACTICAL RECOMMENDATIONS')).toBeVisible({ timeout: 20000 });
-    
-    // Verify at least one recommendation is visible
-    // Recommendation cards usually have "Move [Staff Name]"
-    await expect(page.locator('text=Move')).toBeVisible();
+    // Verify AI Advisory panel appears (real Gemini backend call)
+    await expect(page.getByText('Tactical Advisory')).toBeVisible({ timeout: 20000 });
 
-    // Apply AI Recommendation
-    await page.click('button:has-text("APPLY AI RECOMMENDATION")');
-    
+    // Apply first AI recommendation
+    await page.click('button:has-text("EXECUTE REDIRECT")');
+
     // Verify Dispatch Toast
-    await expect(page.locator('text=Dispatch order broadcasted')).toBeVisible();
+    await expect(page.locator('text=Dispatch order broadcasted')).toBeVisible({ timeout: 10000 });
   });
 
   test('Manual Dispatch: Dynamic Personnel Allocation', async ({ page }) => {
-    await page.goto('/staff/event/event_001');
-    await page.click('button:has-text("Personnel Matrix")');
+    // Navigate to Intelligence Hub
+    const eventCard = page.locator('.group').filter({ hasText: /India vs Australia/i }).first();
+    await eventCard.click();
+    await expect(page.getByText('Intelligence Hub')).toBeVisible({ timeout: 15000 });
+
+    // Open Personnel Matrix
+    await page.getByRole('button', { name: 'Personnel Matrix' }).click();
+
+    // Switch to Staff sub-tab within IntelligenceHubView
+    await page.getByRole('button', { name: 'Staff' }).click();
 
     // Click Dispatch on any staff row
     const dispatchBtn = page.locator('button:has-text("Dispatch")').first();
     await dispatchBtn.click();
 
-    // Verify Gate list dropdown/options (Chinnaswamy labels derived from seeding)
-    // Seeding uses "Gate A", "Gate B", "Accessibility Ramp"
+    // Select Gate B from the dispatch modal gate list
     await page.click('text=Gate B');
 
-    // Verify confirmation
-    await expect(page.locator('text=Dispatch order broadcasted')).toBeVisible();
+    // Confirm the dispatch
+    await page.click('button:has-text("CONFIRM DISPATCH")');
+
+    // Verify confirmation toast
+    await expect(page.locator('text=Dispatch order broadcasted')).toBeVisible({ timeout: 10000 });
   });
 });

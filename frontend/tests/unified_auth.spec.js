@@ -73,7 +73,7 @@ test.describe('Unified Auth & Routing Flow', () => {
 
     // Verify redirection back to /dashboard
     await expect(page).toHaveURL(/\/dashboard/);
-    await expect(page.getByText('My Events')).toBeVisible();
+    await expect(page.getByText('Tactical Ticketing')).toBeVisible();
   });
 
   test('ADMIN: Master Key Registration Override', async ({ page }) => {

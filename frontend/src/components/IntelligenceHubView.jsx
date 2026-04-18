@@ -121,7 +121,8 @@ export default function IntelligenceHubView({ eventId, venue, initialTab = 'list
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      
+      <h2 className="text-2xl font-black text-white uppercase italic tracking-tight">Intelligence Hub</h2>
+
       {/* Tactical Overview Panels */}
       <div 
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"

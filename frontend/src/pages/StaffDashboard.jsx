@@ -145,7 +145,13 @@ export default function StaffDashboard() {
                   <p className="text-[10px] font-bold text-blue-500 uppercase tracking-[0.3em] mt-1">Tactical Personnel Entry</p>
                </div>
             </div>
-            <button onClick={logout} className="p-3 bg-slate-900 rounded-full border border-slate-800 hover:text-rose-500 transition-all shadow-lg"><LogOut size={20} /></button>
+            <button 
+              onClick={logout} 
+              aria-label="Logout and disconnect from tactical network"
+              className="p-3 bg-slate-900 rounded-full border border-slate-800 hover:text-rose-500 transition-all shadow-lg"
+            >
+              <LogOut size={20} />
+            </button>
           </header>
 
           <main className="flex-1 space-y-12 px-4">
@@ -215,6 +221,8 @@ export default function StaffDashboard() {
           <label className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] pl-1">Operational Frequency</label>
           <div className="relative group">
             <select 
+              id="event-switcher"
+              aria-label="Switch active event operational frequency"
               value={event?.id || ''} 
               onChange={handleEventChange}
               className="w-full bg-slate-900 border border-slate-800 rounded-2xl px-5 py-3.5 appearance-none font-black text-xs focus:ring-2 focus:ring-blue-600 outline-none transition-all cursor-pointer pr-10 hover:border-slate-700 shadow-lg"

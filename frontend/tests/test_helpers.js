@@ -103,6 +103,9 @@ export async function performLogin(page, email, password, targetUrl) {
   await page.fill('#email', email);
   await page.fill('#password', password);
   
+  console.log(`[Test] Waiting for submit button to be enabled...`);
+  await page.waitForSelector('button[type="submit"]:not(:disabled)', { timeout: 15000 });
+  
   console.log(`[Test] Clicking submit button...`);
   await page.click('button[type="submit"]');
   

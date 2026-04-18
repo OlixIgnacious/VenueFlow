@@ -17,6 +17,7 @@ export default function AdminPersonnelMatrix({ personnel, entryPoints, onDispatc
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
+      <h3 className="text-lg font-black text-white uppercase italic tracking-tight">Tactical Deployment Matrix</h3>
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-sm">
