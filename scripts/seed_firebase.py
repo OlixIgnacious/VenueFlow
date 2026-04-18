@@ -1,37 +1,44 @@
 
 """
 Firebase Seeding Script.
-Initializes the Firebase Realtime Database with sample venues, events, 
+Initializes the Firebase Realtime Database with sample venues, events,
 entry points, and tickets for development and testing.
+
+Credentials (all accounts):
+  Password: VenueFlow@1
+
+  Admin:
+    admin@venueflow.com / VenueFlow@1
+
+  Attendees:
+    tony@stark.com    / VenueFlow@1  (tickets: IND-AUS-101, EXPIRED-STADIUM)
+    peter@parker.com  / VenueFlow@1  (tickets: TECH-EXPO-2026, THEME-PARK-NYE)
+
+  Staff (staff_1@venueflow.com ... staff_30@venueflow.com):
+    Password: VenueFlow@1
 """
 import sys
 import os
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 
-# Pre-computation: Load environment variables before any backend imports 
-# to ensure the singleton firebase_client uses the correct config.
 load_dotenv()
 
-# Add parent directory to sys.path to enable absolute imports of the backend package
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from backend.services.firebase_client import firebase_client
 from firebase_admin import db, auth
 
-def seed():
-    """
-    Populates the Firebase Realtime Database with a standard set of test data.
-    
-    This includes:
-    1. Multiple venue configurations.
-    2. Scheduled events linked to those venues.
-    3. Real-time entry point states (gates).
-    4. Valid attendee tickets for testing flows.
-    """
-    print("🚀 Seeding Firebase with Noice Production Data...")
+# Single password that satisfies the frontend regex:
+# /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/
+DEFAULT_PASSWORD = "VenueFlow@1"
 
-    # 1. Venues: Diverse physical locations with unique taxonomies
+def seed():
+    print("🚀 Seeding Firebase Realtime Database...")
+
+    now = datetime.now(timezone.utc)
+
+    # 1. Venues
     venues = {
         "venue_001": {
             "name": "M. Chinnaswamy Stadium",
@@ -83,15 +90,16 @@ def seed():
         }
     }
     db.reference('/venues').set(venues)
+    print(f"  ✓ {len(venues)} venues")
 
-    # 2. Events: Global scheduled events
+    # 2. Events
     events = {
         "event_001": {
             "name": "India vs Australia — T20",
             "type": "sports_match",
             "venue_id": "venue_001",
             "venue_name": "M. Chinnaswamy Stadium",
-            "start_time": (datetime.now(timezone.utc) + timedelta(hours=2)).isoformat(),
+            "start_time": (now + timedelta(hours=2)).isoformat(),
             "status": "live"
         },
         "event_003": {
@@ -99,7 +107,7 @@ def seed():
             "type": "concert",
             "venue_id": "venue_003",
             "venue_name": "Royal Albert Hall",
-            "start_time": (datetime.now(timezone.utc) + timedelta(days=2)).isoformat(),
+            "start_time": (now + timedelta(days=2)).isoformat(),
             "status": "upcoming"
         },
         "event_004": {
@@ -107,7 +115,7 @@ def seed():
             "type": "festival",
             "venue_id": "venue_004",
             "venue_name": "Coachella Valley Fest",
-            "start_time": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat(),
+            "start_time": (now + timedelta(hours=1)).isoformat(),
             "status": "live"
         },
         "event_005": {
@@ -115,7 +123,7 @@ def seed():
             "type": "business_expo",
             "venue_id": "venue_005",
             "venue_name": "Grand Convention Center",
-            "start_time": (datetime.now(timezone.utc) + timedelta(hours=5)).isoformat(),
+            "start_time": (now + timedelta(hours=5)).isoformat(),
             "status": "upcoming"
         },
         "event_006": {
@@ -123,72 +131,70 @@ def seed():
             "type": "holiday_celebration",
             "venue_id": "venue_006",
             "venue_name": "Starlight Theme Park",
-            "start_time": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat(),
+            "start_time": (now + timedelta(hours=1)).isoformat(),
             "status": "live"
         }
     }
     db.reference('/events').set(events)
+    print(f"  ✓ {len(events)} events")
 
-    # 3. Entry Points for Venue 001 (Stadium)
+    # 3. Entry Points — venue_001 (Stadium, 6 gates)
     entry_points_001 = {}
-    gate_labels = ["A", "B", "C", "D", "E", "F"]
-    for i, label in enumerate(gate_labels):
+    for i, label in enumerate(["A", "B", "C", "D", "E", "F"]):
+        bottleneck = label == "B"
         entry_points_001[f"entry_{label}"] = {
             "label": f"Gate {label}",
             "proximity_tags": [f"Block {label}", f"Zone {i+1}"],
             "coordinates": {"lat": 12.9720 + (i * 0.0005), "lng": 77.5940 + (i * 0.0005)},
-            "density": 0.1 if label != "B" else 0.85, 
-            "wait_minutes": 2 if label != "B" else 25,
-            "status": "low" if label != "B" else "high",
+            "density": 0.85 if bottleneck else 0.10,
+            "wait_minutes": 25 if bottleneck else 2,
+            "status": "high" if bottleneck else "low",
             "capacity": 500,
-            "current_count": 50 if label != "B" else 425
+            "current_count": 425 if bottleneck else 50
         }
     db.reference('/entry_points/event_001').set(entry_points_001)
 
-    # 4. Entry Points for Venue 003 (Royal Albert Hall - NO MORE TECH SUMMIT HALLUCINATIONS)
+    # 4. Entry Points — venue_003 (Royal Albert Hall, 12 doors)
     entry_points_003 = {}
     for i in range(12):
-        label = str(i + 1)
-        # Doors 1-4 are congested near the Stalls
-        is_bottleneck = i < 4
-        entry_points_003[f"door_{label}"] = {
-            "label": f"Door {label}",
-            "proximity_tags": [f"Box {label}", f"Tier {label}"],
+        bottleneck = i < 4
+        entry_points_003[f"door_{i+1}"] = {
+            "label": f"Door {i+1}",
+            "proximity_tags": [f"Box {i+1}", f"Tier {i+1}"],
             "coordinates": {"lat": 51.5005 + (i * 0.0001), "lng": -0.1770 + (i * 0.0001)},
-            "density": 0.8 if is_bottleneck else 0.15,
-            "wait_minutes": 15 if is_bottleneck else 3,
-            "status": "high" if is_bottleneck else "low",
+            "density": 0.80 if bottleneck else 0.15,
+            "wait_minutes": 15 if bottleneck else 3,
+            "status": "high" if bottleneck else "low",
             "capacity": 200,
-            "current_count": 160 if is_bottleneck else 30
+            "current_count": 160 if bottleneck else 30
         }
     db.reference('/entry_points/event_003').set(entry_points_003)
 
-    # 5. Entry Points for Venue 004 (Festival - PURE COACHELLA CONTEXT)
+    # 5. Entry Points — venue_004 (Festival, 12 portals)
     entry_points_004 = {}
     for i in range(12):
         label = chr(65 + i)
-        is_bottleneck = label in ["A", "B", "C"]
+        bottleneck = label in ["A", "B", "C"]
         entry_points_004[f"entry_{label}"] = {
             "label": f"Portal {label}",
             "proximity_tags": [f"Zone {label}", f"Meadow {label}"],
             "coordinates": {"lat": 33.6780 + (i * 0.001), "lng": -116.2370 + (i * 0.001)},
-            "density": 0.95 if is_bottleneck else 0.05, 
-            "wait_minutes": 60 if is_bottleneck else 2,
-            "status": "high" if is_bottleneck else "low",
+            "density": 0.95 if bottleneck else 0.05,
+            "wait_minutes": 60 if bottleneck else 2,
+            "status": "high" if bottleneck else "low",
             "capacity": 2000,
-            "current_count": 1900 if is_bottleneck else 100
+            "current_count": 1900 if bottleneck else 100
         }
     db.reference('/entry_points/event_004').set(entry_points_004)
-    
-    # 6. Entry Points for Venue 005 (Grand Convention Center)
+
+    # 6. Entry Points — venue_005 (Convention Center, 8 plazas)
     entry_points_005 = {}
     for i in range(8):
-        label = str(i + 1)
-        entry_points_005[f"entry_{label}"] = {
-            "label": f"Plaza Entry {label}",
+        entry_points_005[f"entry_{i+1}"] = {
+            "label": f"Plaza Entry {i+1}",
             "proximity_tags": [f"Hall {chr(65+i)}", f"Booth {100*(i+1)}"],
             "coordinates": {"lat": 37.7840 + (i * 0.0002), "lng": -122.4015 + (i * 0.0002)},
-            "density": 0.3, 
+            "density": 0.30,
             "wait_minutes": 5,
             "status": "low",
             "capacity": 800,
@@ -196,30 +202,29 @@ def seed():
         }
     db.reference('/entry_points/event_005').set(entry_points_005)
 
-    # 7. Entry Points for Venue 006 (Theme Park - MANY GATES)
+    # 7. Entry Points — venue_006 (Theme Park, 15 turnstiles)
     entry_points_006 = {}
     for i in range(15):
-        label = str(i + 1)
-        # Afternoon peak simulation
-        is_peak = i % 3 == 0
-        entry_points_006[f"gate_{label}"] = {
-            "label": f"Turnstile {label}",
+        peak = i % 3 == 0
+        entry_points_006[f"gate_{i+1}"] = {
+            "label": f"Turnstile {i+1}",
             "proximity_tags": [f"Land {chr(65+i)}", "Main Street"],
             "coordinates": {"lat": 28.3850 + (i * 0.0003), "lng": -81.5630 + (i * 0.0003)},
-            "density": 0.88 if is_peak else 0.1,
-            "wait_minutes": 45 if is_peak else 2,
-            "status": "high" if is_peak else "low",
+            "density": 0.88 if peak else 0.10,
+            "wait_minutes": 45 if peak else 2,
+            "status": "high" if peak else "low",
             "capacity": 1500,
-            "current_count": 1320 if is_peak else 150
+            "current_count": 1320 if peak else 150
         }
     db.reference('/entry_points/event_006').set(entry_points_006)
+    print("  ✓ Entry points for all events")
 
-    # 6. Global Sample Tickets
+    # 8. Tickets
     tickets = {
         "IND-AUS-101": {
             "event_id": "event_001",
             "event_name": "India vs Australia — T20",
-            "date": "April 11, 2026",
+            "date": "April 19, 2026",
             "persons": 2,
             "location_ref": "Block B, Row 12",
             "venue_address": "Cubbon Park, Bengaluru, Karnataka 560001",
@@ -232,7 +237,7 @@ def seed():
             "event_name": "Summer Solstice Fest 2026",
             "date": "June 21, 2026",
             "persons": 1,
-            "location_ref": "Zone A", 
+            "location_ref": "Zone A",
             "venue_address": "81-800 Avenue 51, Indio, CA 92201",
             "status": "valid",
             "owner_name": "Bruce Banner",
@@ -240,8 +245,8 @@ def seed():
         },
         "RAH-BOX-12": {
             "event_id": "event_003",
-            "event_name": "Classic Night",
-            "date": "April 13, 2026",
+            "event_name": "Classic Night: Beethoven's 9th",
+            "date": "April 21, 2026",
             "persons": 2,
             "location_ref": "Box 12, West Tier",
             "venue_address": "Kensington Gore, London SW7 2AP, UK",
@@ -263,7 +268,7 @@ def seed():
         "THEME-PARK-NYE": {
             "event_id": "event_006",
             "event_name": "New Year Countdown Splash",
-            "date": "Dec 31, 2025",
+            "date": "Dec 31, 2026",
             "persons": 4,
             "location_ref": "Tomorrowland Entry",
             "venue_address": "Lake Buena Vista, FL 32830",
@@ -277,63 +282,60 @@ def seed():
             "date": "Jan 01, 2024",
             "persons": 1,
             "location_ref": "Block A",
-            "venue_address": "Bengalaru",
+            "venue_address": "Bengaluru",
             "status": "expired",
             "owner_name": "Tony Stark",
             "claimed_by_uid": "tony_stark_uid"
         }
     }
     db.reference('/tickets').set(tickets)
+    print(f"  ✓ {len(tickets)} tickets")
 
-    # 7. Mock Users Data
-    # Adding a large staff pool (30+)
+    # 9. Users (admin + 2 attendees + 30 staff)
     users = {
         "admin_mock_uid": {
             "name": "Admin User",
             "email": "admin@venueflow.com",
-            "password": "password123",
+            "password": DEFAULT_PASSWORD,
             "role": "admin"
         },
         "tony_stark_uid": {
             "name": "Tony Stark",
             "email": "tony@stark.com",
-            "password": "password123",
+            "password": DEFAULT_PASSWORD,
             "role": "attendee",
             "claimed_tickets": ["IND-AUS-101", "EXPIRED-STADIUM"]
         },
         "peter_parker_uid": {
             "name": "Peter Parker",
             "email": "peter@parker.com",
-            "password": "password123",
+            "password": DEFAULT_PASSWORD,
             "role": "attendee",
             "claimed_tickets": ["TECH-EXPO-2026", "THEME-PARK-NYE"]
         }
     }
 
-    # Generate 30 Staff Users
     staff_names = [
         "Steve Rogers", "Natasha Romanoff", "Bruce Banner", "Thor Odinson", "Clint Barton",
         "Wanda Maximoff", "Vision", "Sam Wilson", "James Rhodes", "Bucky Barnes",
         "Scott Lang", "Hope van Dyne", "T'Challa", "Carol Danvers", "Peter Quill",
-        "Gamora", "Drax", "Rocket Raccoon", "Groot", "Mantice",
+        "Gamora", "Drax", "Rocket Raccoon", "Groot", "Mantis",
         "Stephen Strange", "Wong", "Arthur Curry", "Barry Allen", "Victor Stone",
         "Diana Prince", "Clark Kent", "Bruce Wayne", "Hal Jordan", "Oliver Queen"
     ]
-
     for i, name in enumerate(staff_names):
         uid = f"staff_uid_{i+1}"
-        email = f"staff_{i+1}@venueflow.com"
         users[uid] = {
             "name": name,
-            "email": email,
-            "password": "password123",
+            "email": f"staff_{i+1}@venueflow.com",
+            "password": DEFAULT_PASSWORD,
             "role": "staff",
             "assigned_events": ["event_001", "event_004"] if i < 20 else ["event_006", "event_005"]
         }
-    
-    # Clean up and seed Auth + DB
+
+    # Sync to Firebase Auth + RTDB
     rtdb_users = {}
-    print("Creating mock Firebase Auth users...")
+    print(f"  Syncing {len(users)} users to Firebase Auth...")
     for uid, user_data in users.items():
         try:
             auth.create_user(
@@ -342,60 +344,70 @@ def seed():
                 password=user_data["password"],
                 display_name=user_data["name"]
             )
-            print(f"  Created auth user: {user_data['email']}")
-        except auth.EmailAlreadyExistsError:
-            auth.update_user(uid=uid, password=user_data["password"])
-            print(f"  Auth user existed, updated password: {user_data['email']}")
-        except Exception as e:
-            print(f"  Skipped auth creation for {user_data['email']}: {e}")
+            print(f"    + Created  {user_data['email']}")
+        except Exception:
+            try:
+                auth.update_user(
+                    uid=uid,
+                    email=user_data["email"],
+                    password=user_data["password"],
+                    display_name=user_data["name"]
+                )
+                print(f"    ~ Updated  {user_data['email']}")
+            except Exception as e:
+                print(f"    ! Failed   {user_data['email']}: {e}")
 
-        db_user = user_data.copy()
-        del db_user["password"]
-        rtdb_users[uid] = db_user
+        db_entry = {k: v for k, v in user_data.items() if k != "password"}
+        rtdb_users[uid] = db_entry
 
     db.reference('/users').set(rtdb_users)
+    print(f"  ✓ {len(rtdb_users)} user profiles written to RTDB")
 
-    # 8. Command & Control: Staff Presence
-    # FORCE BOTTLENECK: Put 29 staff at Gate A, leave Gate B empty.
+    # 10. Staff Presence (29 at Gate A to simulate bottleneck)
     presence = {"event_001": {}}
-    
     for i in range(30):
         uid = f"staff_uid_{i+1}"
         if "event_001" in users[uid]["assigned_events"]:
-            # All 29 staff at Gate A to create a massive imbalance
-            # except maybe 1 at C for some variety
-            status = "active"
             gate = "entry_A" if i < 29 else "entry_C"
-            
             presence["event_001"][uid] = {
                 "name": users[uid]["name"],
                 "current_gate_id": gate,
-                "status": status,
-                "last_reported": datetime.now(timezone.utc).isoformat()
+                "status": "active",
+                "last_reported": now.isoformat()
             }
-            
     db.reference('/staff_presence').set(presence)
 
-    # 9. Initial Notifications (Logs)
-    notifications = {
-        "staff_two_uid": {
+    # 11. Initial Notifications
+    db.reference('/staff_notifications').set({
+        "staff_uid_1": {
             "notif_001": {
-                "message": "Welcome to the New Year shift. Report to your assigned gate.",
-                "target_gate_id": "gate_1",
+                "message": "Welcome. Report to your assigned gate.",
+                "target_gate_id": "entry_A",
                 "sender_name": "System",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": now.isoformat(),
                 "status": "unread",
                 "acknowledged_at": None
             }
         }
-    }
-    db.reference('/staff_notifications').set(notifications)
+    })
 
-    # 10. Emergency Alerts (Empty initially)
     db.reference('/emergency_alerts').set({})
-
     db.reference('/active_event').set({"event_id": "event_001"})
-    print("✅ Full Expansion Context Seeding complete.")
+
+    print("\n✅ Seeding complete.")
+    print("\n─────────────── CREDENTIALS ───────────────")
+    print(f"  Password (all accounts): {DEFAULT_PASSWORD}")
+    print()
+    print("  ADMIN")
+    print("    admin@venueflow.com")
+    print()
+    print("  ATTENDEES")
+    print("    tony@stark.com    (tickets: IND-AUS-101)")
+    print("    peter@parker.com  (tickets: TECH-EXPO-2026, THEME-PARK-NYE)")
+    print()
+    print("  STAFF  (staff_1@venueflow.com … staff_30@venueflow.com)")
+    print("────────────────────────────────────────────")
+
 
 if __name__ == "__main__":
     seed()
