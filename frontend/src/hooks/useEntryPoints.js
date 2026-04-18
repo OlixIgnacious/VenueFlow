@@ -16,21 +16,26 @@ export const useEntryPoints = (eventId) => {
     // Prevent subscription if no event ID is provided
     if (!eventId) return;
 
+    // Fallback: resolve loading if RTDB doesn't respond (e.g., offline/test envs)
+    const timeout = setTimeout(() => setLoading(false), 3000);
+
     // Create a reference to the specific event's entry point node in RTDB
     const entryPointsRef = ref(rtdb, `entry_points/${eventId}`);
-    
+
     // Establish a real-time listener
     const unsubscribe = onValue(entryPointsRef, (snapshot) => {
+      clearTimeout(timeout);
       const data = snapshot.val();
       setEntryPoints(data || {});
       setLoading(false);
     }, (error) => {
+      clearTimeout(timeout);
       console.error("Firebase RTDB error:", error);
       setLoading(false);
     });
 
     // Cleanup: unsubscribe from the RTDB listener on component unmount
-    return () => unsubscribe();
+    return () => { clearTimeout(timeout); unsubscribe(); };
   }, [eventId]);
 
   return { entryPoints, loading };

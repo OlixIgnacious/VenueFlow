@@ -78,7 +78,7 @@ export default function AuthPortal() {
         <h1 className="text-4xl font-black tracking-tighter text-white italic">
           VENUE<span className="text-emerald-500">FLOW</span>
         </h1>
-        <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.3em] mt-2">AI-Driven Crowd Orchestration</p>
+        <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em] mt-2">AI-Driven Crowd Orchestration</p>
       </div>
 
       {/* Main Auth Container */}
@@ -102,7 +102,7 @@ export default function AuthPortal() {
 
         <div className="p-8 md:p-12 pt-6">
           <h2 className="text-2xl font-bold text-white mb-2">{isRegister ? 'Identity Enrollment' : 'Secure Entry'}</h2>
-          <p className="text-slate-500 text-xs mb-8">
+          <p className="text-slate-400 text-xs mb-8">
             {isRegister ? 'Configure your credential profile for secure venue access.' : 'Provide authorized credentials to access your tactical dashboard.'}
           </p>
 
@@ -198,7 +198,7 @@ export default function AuthPortal() {
 
             <button 
               disabled={loading}
-              className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:text-slate-500 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl shadow-emerald-900/20 flex items-center justify-center space-x-3 group"
+              className="w-full bg-emerald-700 hover:bg-emerald-600 disabled:bg-slate-800 disabled:text-slate-500 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl shadow-emerald-900/20 flex items-center justify-center space-x-3 group"
             >
               {loading ? (
                 <>
@@ -221,7 +221,7 @@ export default function AuthPortal() {
              <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-slate-700" />
           </div>
           
-          <p className="text-center mt-6 text-slate-600 text-[10px] font-bold uppercase tracking-widest">
+          <p className="text-center mt-6 text-slate-400 text-[10px] font-bold uppercase tracking-widest">
              Encryption level: AES-256 MIL-SPEC
           </p>
         </div>
