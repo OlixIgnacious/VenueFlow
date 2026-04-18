@@ -92,8 +92,9 @@ export const VenueProvider = ({ children }) => {
     console.log(`[VenueContext] URL Change Detected. Target ID: ${targetEventId}, Current State: ${event?.id}`);
 
     if (targetEventId) {
-      if (targetEventId !== event?.id && !error) {
+      if (targetEventId !== event?.id) {
         console.log(`[VenueContext] URL/State mismatch. Syncing to: ${targetEventId}`);
+        setError(null);
         fetchConfig(targetEventId);
       }
     } else if (!event && !error) {

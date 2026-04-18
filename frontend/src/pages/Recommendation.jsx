@@ -106,11 +106,24 @@ const Recommendation = () => {
     );
   }
 
-  if (venueLoading || loading || !venue || !recommendation) {
+  if (!venueLoading && !loading && !venue) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen text-center p-6 space-y-6">
+        <div className="space-y-2">
+          <h2 className="text-2xl font-bold text-red-400">Venue Unavailable</h2>
+          <p className="text-slate-400 max-w-xs mx-auto">Could not load venue data for this event.</p>
+        </div>
+        <button onClick={() => navigate(-1)} className="bg-slate-800 px-6 py-3 rounded-2xl font-bold hover:bg-slate-700 transition-colors">Go Back</button>
+      </div>
+    );
+  }
+
+  if (venueLoading || loading || !recommendation) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen space-y-4">
         <Loader2 className="w-12 h-12 text-blue-500 animate-spin" />
         <p className="text-slate-400">AI is calculating the best route for you...</p>
+        <button onClick={() => navigate(-1)} className="mt-4 text-slate-500 hover:text-slate-300 text-sm underline transition-colors">Go back</button>
       </div>
     );
   }
